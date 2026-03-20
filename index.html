@@ -427,13 +427,13 @@
             </nav>
 
             <div class="p-4 sm:p-6 border-t border-zinc-800 space-y-4">
-                <button onclick="document.getElementById('fileInput').click()"
-                        class="w-full bg-zinc-800 hover:bg-zinc-700 border border-dashed border-zinc-700 rounded-3xl py-5 sm:py-6 px-4 text-center transition-all">
+                <label for="fileInput"
+                       class="w-full bg-zinc-800 hover:bg-zinc-700 border border-dashed border-zinc-700 rounded-3xl py-5 sm:py-6 px-4 text-center transition-all cursor-pointer block">
                     <i class="fa-solid fa-file-excel text-4xl sm:text-5xl text-emerald-400 mb-2"></i>
                     <p class="font-medium text-sm sm:text-base">Importar Planilha</p>
                     <p class="text-[11px] sm:text-xs text-zinc-500 break-all">Op-BZero-Modelo.xlsx</p>
-                </button>
-                <input type="file" id="fileInput" accept=".xlsx" class="hidden" onchange="handleFileUpload(event)">
+                </label>
+                <input type="file" id="fileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" onchange="handleFileUpload(event)">
 
                 <button onclick="generateAndShowPDF()"
                         class="w-full bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base">
