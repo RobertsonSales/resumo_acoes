@@ -433,7 +433,7 @@
                     <p class="font-medium text-sm sm:text-base">Importar Planilha</p>
                     <p class="text-[11px] sm:text-xs text-zinc-500 break-all">Op-BZero-Modelo.xlsx</p>
                 </label>
-                <input type="file" id="fileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" onchange="handleFileUpload(event)">
+                <input type="file" id="fileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onchange="handleFileUpload(event)" style="opacity:0;position:absolute;width:1px;height:1px;overflow:hidden;pointer-events:none;">
 
                 <button onclick="generateAndShowPDF()"
                         class="w-full bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base">
