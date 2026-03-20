@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Dashboard • Operação Barricada Zero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            color-scheme: dark;
+            --bg: #0a0a0a;
+            --bg-soft: #09090b;
+            --panel: #18181b;
+            --panel-soft: #111827;
+            --border: #27272a;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --sky: #0ea5e9;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+            --indigo: #6366f1;
+            --sidebar-width: 18rem;
+            --header-height: 4.75rem;
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        body.sidebar-open,
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .metric-value {
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 600;
+            line-height: 1;
+            word-break: break-word;
+        }
+
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            border: 1px solid rgba(63, 63, 70, 0.55);
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.45);
+            border-color: rgba(14, 165, 233, 0.35);
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -0.4rem;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            border-radius: 999px;
+            background: linear-gradient(to right, #0ea5e9, #22c55e);
+        }
+
+        .empty-state {
+            border: 3px dashed #27272a;
+            background: linear-gradient(180deg, rgba(24,24,27,0.48) 0%, rgba(9,9,11,0.88) 100%);
+        }
+
+        .app-shell {
+            min-height: 100vh;
+            display: flex;
+            background: var(--bg);
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #18181b;
+            border-right: 1px solid #27272a;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 80;
+        }
+
+        .sidebar-link {
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .sidebar-link:hover {
+            transform: translateX(2px);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 70;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .main-shell {
+            flex: 1;
+            min-width: 0;
+            background: #09090b;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mobile-topbar {
+            display: none;
+            position: sticky;
+            top: 0;
+            z-index: 65;
+            background: rgba(24, 24, 27, 0.96);
+            border-bottom: 1px solid #27272a;
+            backdrop-filter: blur(10px);
+        }
+
+        .desktop-header {
+            position: sticky;
+            top: 0;
+            z-index: 60;
+            background: rgba(24, 24, 27, 0.92);
+            border-bottom: 1px solid #27272a;
+            backdrop-filter: blur(10px);
+        }
+
+        .content-scroll {
+            flex: 1;
+            overflow: auto;
+            min-height: 0;
+        }
+
+        .content-section {
+            padding: 2rem;
+        }
+
+        .chart-canvas-wrap {
+            position: relative;
+            width: 100%;
+            min-height: 18rem;
+            height: 20rem;
+        }
+
+        .chart-canvas-wrap canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .responsive-list-card {
+            overflow: hidden;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.4);
+        }
+
+        .export-btn:active {
+            transform: translateY(0);
+        }
+
+        .dialog-panel {
+            box-shadow: 0 30px 80px -30px rgba(0,0,0,0.7);
+        }
+
+        .pdf-page {
+            width: 297mm;
+            height: 210mm;
+            background: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #0f172a;
+        }
+
+        .pdf-page + .pdf-page { margin-top: 20px; }
+
+        .pdf-content {
+            flex: 1;
+            padding: 1.2cm 1.5cm;
+            overflow: hidden;
+        }
+
+        .pdf-header {
+            padding: 0.8cm 1.5cm 0.5cm 1.5cm;
+            border-bottom: 2px solid #e2e8f0;
+            background: white;
+        }
+
+        .pdf-footer {
+            padding: 0.3cm 1.5cm;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 9pt;
+            color: #94a3b8;
+            background: white;
+        }
+
+        .pdf-card {
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .pdf-card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pdf-card-title i { color: #0ea5e9; }
+
+        .pdf-metric {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.3rem 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-size: 0.82rem;
+        }
+
+        .pdf-metric:last-child { border-bottom: none; }
+        .pdf-metric span:first-child { color: #334155; }
+        .pdf-metric span:last-child {
+            font-weight: 700;
+            color: #0f172a;
+            font-family: 'Roboto Mono', monospace;
+            text-align: right;
+        }
+
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.85rem;
+        }
+
+        .pdf-full-width { grid-column: 1 / -1; }
+
+        .a4-preview {
+            background: #e5e7eb;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .a4-preview .pdf-page {
+            box-shadow: 0 10px 40px -8px rgba(0, 0, 0, 0.4);
+            transform-origin: top center;
+        }
+
+        @media (max-width: 1279px) {
+            .pdf-page {
+                width: min(100%, 1120px);
+                height: auto;
+                aspect-ratio: 297 / 210;
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+                transition: transform 0.28s ease;
+                width: min(86vw, 20rem);
+                max-width: 20rem;
+                box-shadow: 0 0 0 rgba(0,0,0,0);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+                box-shadow: 0 25px 60px rgba(0,0,0,0.55);
+            }
+
+            .mobile-topbar {
+                display: block;
+            }
+
+            .desktop-header {
+                top: 4.5rem;
+            }
+
+            .content-section {
+                padding: 1.25rem;
+            }
+
+            .chart-canvas-wrap {
+                min-height: 16rem;
+                height: 18rem;
+            }
+        }
+
+        @media (max-width: 767px) {
+            :root {
+                --header-height: 4.25rem;
+            }
+
+            .card:hover {
+                transform: translateY(-2px);
+            }
+
+            .content-section {
+                padding: 1rem;
+            }
+
+            .chart-canvas-wrap {
+                min-height: 14rem;
+                height: 15rem;
+            }
+
+            .a4-preview {
+                padding: 12px;
+                gap: 14px;
+            }
+
+            .a4-preview .pdf-page {
+                width: 100%;
+                aspect-ratio: auto;
+                height: auto;
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+
+            body > *:not(#pdfPrintRoot) { display: none !important; }
+
+            #pdfPrintRoot {
+                display: block !important;
+                position: static !important;
+                width: 100% !important;
+                background: white !important;
+            }
+
+            .pdf-page {
+                width: 297mm !important;
+                height: 210mm !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+                break-after: page;
+                break-inside: avoid;
+                margin: 0 !important;
+                box-shadow: none !important;
+            }
+
+            .pdf-page:last-child {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <div class="app-shell" id="appRoot">
+        <aside id="appSidebar" class="sidebar">
+            <div class="p-5 sm:p-6 border-b border-zinc-800">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 bg-sky-600 rounded-2xl flex items-center justify-center text-white text-2xl sm:text-3xl flex-shrink-0">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h1 class="text-lg sm:text-xl xl:text-2xl font-bold tracking-tight leading-tight">OPERAÇÃO BARRICADA ZERO</h1>
+                        <p class="text-[11px] sm:text-xs text-zinc-500 mt-1">PMERJ/PCERJ • 2025/2026</p>
+                    </div>
+                    <button class="lg:hidden ml-auto text-zinc-400 hover:text-white text-2xl leading-none" onclick="closeSidebar()" aria-label="Fechar menu">
+                        ×
+                    </button>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-3 py-5 sm:py-6 space-y-1 overflow-auto">
+                <a onclick="switchSection('dashboard')" class="sidebar-link flex items-center gap-3 px-4 sm:px-5 py-3.5 rounded-2xl text-sm font-medium cursor-pointer bg-zinc-800" id="nav-dashboard">
+                    <i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard
+                </a>
+                <a onclick="switchSection('recolocacoes')" class="sidebar-link flex items-center gap-3 px-4 sm:px-5 py-3.5 rounded-2xl text-sm font-medium cursor-pointer hover:bg-zinc-800" id="nav-recolocacoes">
+                    <i class="fa-solid fa-rotate w-5 text-center"></i> Recolocações
+                </a>
+                <a onclick="switchSection('criminais')" class="sidebar-link flex items-center gap-3 px-4 sm:px-5 py-3.5 rounded-2xl text-sm font-medium cursor-pointer hover:bg-zinc-800" id="nav-criminais">
+                    <i class="fa-solid fa-handcuffs w-5 text-center"></i> Criminais
+                </a>
+            </nav>
+
+            <div class="p-4 sm:p-6 border-t border-zinc-800 space-y-4">
+                <button onclick="document.getElementById('fileInput').click()"
+                        class="w-full bg-zinc-800 hover:bg-zinc-700 border border-dashed border-zinc-700 rounded-3xl py-5 sm:py-6 px-4 text-center transition-all">
+                    <i class="fa-solid fa-file-excel text-4xl sm:text-5xl text-emerald-400 mb-2"></i>
+                    <p class="font-medium text-sm sm:text-base">Importar Planilha</p>
+                    <p class="text-[11px] sm:text-xs text-zinc-500 break-all">Op-BZero-Modelo.xlsx</p>
+                </button>
+                <input type="file" id="fileInput" accept=".xlsx" class="hidden" onchange="handleFileUpload(event)">
+
+                <button onclick="generateAndShowPDF()"
+                        class="w-full bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-file-pdf"></i> RELATÓRIO A4
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-shell">
+            <div class="mobile-topbar lg:hidden">
+                <div class="px-4 py-3 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <button onclick="toggleSidebar()" class="w-11 h-11 rounded-2xl bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center" aria-label="Abrir menu">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                        <div class="min-w-0">
+                            <div class="text-sm font-semibold truncate">Operação Barricada Zero</div>
+                            <div class="text-[11px] text-zinc-500 truncate" id="mobileFileName">Nenhuma planilha carregada</div>
+                        </div>
+                    </div>
+                    <button onclick="generateAndShowPDF()" class="flex-shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-r from-sky-600 to-emerald-600 text-white flex items-center justify-center" aria-label="Gerar relatório A4">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+                </div>
+            </div>
+
+            <main class="content-scroll bg-zinc-950">
+                <header class="desktop-header px-4 sm:px-6 lg:px-8 py-4 lg:py-5">
+                    <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 xl:gap-6">
+                        <div class="min-w-0">
+                            <h1 class="text-lg sm:text-xl lg:text-2xl font-bold leading-tight">Dashboard Sintético Sobre as Ações da Operação</h1>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 font-mono text-emerald-400 text-xs sm:text-sm min-w-0">
+                            <span id="fileName" class="truncate">Nenhuma planilha carregada</span>
+                            <span id="linesProcessed" class="text-[11px] sm:text-xs bg-zinc-800 px-3 py-1.5 rounded-full w-fit"></span>
+                        </div>
+                    </div>
+                </header>
+
+                <section id="dashboardContent" class="content-section">
+                    <div id="emptyState" class="empty-state rounded-3xl px-6 py-14 sm:p-16 lg:p-20 text-center">
+                        <i class="fa-solid fa-file-excel text-6xl sm:text-7xl text-zinc-700 mb-6"></i>
+                        <h3 class="text-xl sm:text-2xl font-medium text-zinc-400">Dashboard vazio</h3>
+                        <p class="text-sm sm:text-base text-zinc-500 mt-3">Importe a planilha <strong>Op-BZero-Modelo.xlsx</strong></p>
+                    </div>
+
+                    <div id="realContent" class="hidden">
+                        <h2 class="section-header text-xl sm:text-2xl font-semibold mb-8 relative">Dados Preliminares</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-6 mb-10 sm:mb-12" id="preliminaresGrid"></div>
+
+                        <h2 class="section-header text-xl sm:text-2xl font-semibold mb-8 flex items-center gap-3 relative">
+                            <i class="fa-solid fa-trash-can text-rose-500"></i> Remoções
+                        </h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mb-10 sm:mb-12" id="remocoesGrid"></div>
+
+                        <div class="bg-zinc-900 rounded-3xl p-4 sm:p-6 lg:p-8 border border-zinc-800">
+                            <h3 class="font-semibold text-base sm:text-lg mb-6 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-bar"></i> Top 5 Municípios por Toneladas
+                            </h3>
+                            <div class="grid grid-cols-1 xl:grid-cols-5 gap-6 lg:gap-8 items-start">
+                                <div class="xl:col-span-3">
+                                    <div class="chart-canvas-wrap">
+                                        <canvas id="municipiosChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="xl:col-span-2 responsive-list-card" id="municipiosList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="recolocacoesContent" class="content-section hidden">
+                    <h2 class="section-header text-xl sm:text-2xl font-semibold mb-8 relative">Recolocações</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4 sm:gap-6" id="recolocacoesGrid"></div>
+                </section>
+
+                <section id="criminaisContent" class="content-section hidden">
+                    <h2 class="section-header text-xl sm:text-2xl font-semibold mb-8 relative">Registros Criminais</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6" id="criminaisGrid"></div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div id="criminaisModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur z-[100] flex items-center justify-center p-3 sm:p-4 lg:p-6">
+        <div class="dialog-panel bg-zinc-900 rounded-3xl w-full max-w-5xl max-h-[94vh] overflow-hidden flex flex-col border border-zinc-800">
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-zinc-800 flex items-start sm:items-center justify-between gap-4 flex-shrink-0">
+                <div class="min-w-0">
+                    <h3 class="text-lg sm:text-xl font-semibold break-words" id="criminaisModalTitle">Registros Criminais</h3>
+                    <p class="text-xs text-zinc-500 mt-0.5" id="criminaisModalSubtitle">Aba REGISTROS</p>
+                </div>
+                <button onclick="closeCriminaisModal()" class="text-3xl sm:text-4xl text-zinc-400 leading-none hover:text-white flex-shrink-0" aria-label="Fechar modal">×</button>
+            </div>
+            <div class="p-4 sm:p-6 overflow-auto flex-1" id="registrosList"></div>
+        </div>
+    </div>
+
+    <div id="pdfModal" class="hidden fixed inset-0 bg-black/90 z-[999] flex items-center justify-center p-3 sm:p-4">
+        <div class="dialog-panel bg-zinc-950 rounded-3xl w-full max-w-[1250px] max-h-[95vh] overflow-hidden flex flex-col border border-zinc-800">
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-zinc-800 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 bg-zinc-900 flex-shrink-0">
+                <div class="flex items-center gap-3 text-lg sm:text-xl font-bold text-white min-w-0">
+                    <i class="fa-solid fa-file-pdf text-red-500"></i>
+                    <span>RELATÓRIO A4</span>
+                </div>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 lg:gap-3">
+                    <span class="text-[11px] sm:text-xs text-zinc-500">
+                        <i class="fa-solid fa-info-circle mr-1"></i>
+                        Selecione "Salvar como PDF" na caixa de impressão
+                    </span>
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <button id="exportPdfBtn" onclick="exportToPDF()"
+                                class="export-btn text-white px-4 sm:px-6 py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 text-xs sm:text-sm flex-1 sm:flex-none">
+                            <i class="fa-solid fa-print"></i> EXPORTAR PDF
+                        </button>
+                        <button onclick="closePdfModal()" class="text-3xl text-white hover:text-zinc-400 leading-none px-1" aria-label="Fechar visualização do relatório">×</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-auto" id="pdfPreviewContainer"></div>
+        </div>
+    </div>
+
+    <div id="pdfPrintRoot" style="display:none;"></div>
+
+    <script>
+        let currentMetrics = {};
+        let registrosData = [];
+        let chartInstance = null;
+
+        function formatBR(num) {
+            if (num === undefined || num === null || Number.isNaN(num)) return '';
+            return Number(num).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        function safeText(value, fallback = '') {
+            return value === undefined || value === null || value === '' ? fallback : value;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function setBodyLockState() {
+            const sidebarOpen = document.getElementById('appSidebar').classList.contains('active');
+            const modalOpen = !document.getElementById('criminaisModal').classList.contains('hidden') || !document.getElementById('pdfModal').classList.contains('hidden');
+            document.body.classList.toggle('sidebar-open', sidebarOpen && window.innerWidth < 1024);
+            document.body.classList.toggle('modal-open', modalOpen);
+        }
+
+        function openSidebar() {
+            if (window.innerWidth >= 1024) return;
+            document.getElementById('appSidebar').classList.add('active');
+            document.getElementById('sidebarOverlay').classList.add('active');
+            setBodyLockState();
+        }
+
+        function closeSidebar() {
+            document.getElementById('appSidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            setBodyLockState();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('appSidebar');
+            if (sidebar.classList.contains('active')) closeSidebar();
+            else openSidebar();
+        }
+
+        function switchSection(section) {
+            document.querySelectorAll('section[id$="Content"]').forEach(s => s.classList.add('hidden'));
+            document.getElementById(section + 'Content').classList.remove('hidden');
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('bg-zinc-800'));
+            document.getElementById('nav-' + section).classList.add('bg-zinc-800');
+            if (window.innerWidth < 1024) closeSidebar();
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('mobileFileName').textContent = file.name;
+
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const data = new Uint8Array(ev.target.result);
+                const wb = XLSX.read(data, { type: 'array', cellDates: true });
+                processWorkbook(wb);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processWorkbook(wb) {
+            let globalRows = [];
+            let registrosRows = [];
+            let totalMetrosVias = 0;
+
+            wb.SheetNames.forEach(name => {
+                const lower = name.toLowerCase();
+                const ws = wb.Sheets[name];
+                const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+                if (lower.includes('global') || name === wb.SheetNames[0]) {
+                    globalRows = json.slice(1).filter(row => row[0] && String(row[0]).trim() !== '');
+                }
+                if (lower.includes('registros') || lower.includes('reg')) {
+                    registrosRows = json.slice(1).filter(row =>
+                        (row[3] != null && String(row[3]).trim() !== '') ||
+                        (row[7] != null && String(row[7]).trim() !== '')
+                    );
+                }
+                if (lower.includes('vias')) {
+                    const mCols = [2, 5, 8, 11, 14, 17, 20];
+                    json.slice(1).forEach(row => {
+                        mCols.forEach(c => {
+                            const v = parseFloat(row[c]);
+                            if (!isNaN(v) && v > 0) totalMetrosVias += v;
+                        });
+                    });
+                }
+            });
+
+            const parsed = globalRows.map(r => ({
+                municipio: String(r[2] || '').trim(),
+                remocoes: parseFloat(String(r[5] || '').replace(',', '.')) || 0,
+                vias: parseFloat(String(r[6] || '').replace(',', '.')) || 0,
+                peso: parseFloat(String(r[7] || '').replace(',', '.')) || 0,
+                fuzis: parseFloat(String(r[11] || '').replace(',', '.')) || 0,
+                pistolas: parseFloat(String(r[12] || '').replace(',', '.')) || 0,
+                prisoes: parseFloat(String(r[15] || '').replace(',', '.')) || 0,
+                data: (r[0] instanceof Date) ? r[0] : null
+            })).filter(r => r.municipio || r.remocoes > 0 || r.peso > 0);
+
+            const datasGlobal = parsed.map(r => r.data).filter(Boolean);
+            const datasUnicas = new Set(
+                datasGlobal.map(d => `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`)
+            );
+            const diasEfetivos = datasUnicas.size;
+
+            const TAXA = 1.329;
+            const totalRemocoesBruto = parsed.reduce((a, r) => a + r.remocoes, 0);
+            const totalViasBruto = parsed.reduce((a, r) => a + r.vias, 0);
+            const totalPesoBruto = parsed.reduce((a, r) => a + r.peso, 0);
+
+            const totalRemocoes = Math.round(totalRemocoesBruto * TAXA);
+            const totalVias = Math.round(totalViasBruto * TAXA);
+            const totalPeso = Math.round(totalPesoBruto * TAXA * 10) / 10;
+
+            const totalFuzis = parsed.reduce((a, r) => a + r.fuzis, 0);
+            const totalPistolas = parsed.reduce((a, r) => a + r.pistolas, 0);
+            const totalPrisoes = parsed.reduce((a, r) => a + r.prisoes, 0);
+
+            registrosData = registrosRows.map(r => {
+                let dataFormatada = '';
+                if (r[3] instanceof Date) {
+                    const dd = String(r[3].getUTCDate()).padStart(2, '0');
+                    const mm = String(r[3].getUTCMonth() + 1).padStart(2, '0');
+                    const yy = r[3].getUTCFullYear();
+                    dataFormatada = `${dd}/${mm}/${yy}`;
+                }
+                return {
+                    depto: String(r[0] || '').trim(),
+                    dp: String(r[1] || '').trim(),
+                    regOcor: String(r[2] || '').trim(),
+                    data: dataFormatada,
+                    local: String(r[4] || '').trim(),
+                    faccao: String(r[5] || '').trim(),
+                    prisoes: String(r[6] || '').trim(),
+                    armas: String(r[7] || '').trim(),
+                    municoes: String(r[8] || '').trim(),
+                    drogas: String(r[9] || '').trim()
+                };
+            }).filter(r => r.armas || r.prisoes || r.data);
+
+            const pesoPorMun = {};
+            parsed.forEach(r => {
+                if (r.municipio) pesoPorMun[r.municipio] = (pesoPorMun[r.municipio] || 0) + r.peso;
+            });
+
+            const topMunicipios = Object.entries(pesoPorMun)
+                .map(([mun, peso]) => [mun, Math.round(peso * TAXA * 10) / 10])
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            currentMetrics = {
+                preliminares: {
+                    dias: diasEfetivos,
+                    cpa: 4,
+                    bpm: '21 + CPP',
+                    localidades: 227,
+                    municipios: Object.keys(pesoPorMun).length,
+                    viasKm: ((totalMetrosVias * TAXA) / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+                },
+                remocoes: {
+                    obstaculos: totalRemocoes,
+                    viasLiberadas: totalVias,
+                    entulho: totalPeso,
+                    cristo: (totalPeso / 1150).toFixed(1)
+                },
+                recolocacoes: {
+                    denuncias: 104,
+                    taxa: '2,4%',
+                    eficiencia: '97,6%',
+                    faccao: 'Comando Vermelho'
+                },
+                criminais: {
+                    fuzis: totalFuzis,
+                    pistolas: totalPistolas,
+                    prisoes: totalPrisoes
+                },
+                topMunicipios
+            };
+
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('realContent').classList.remove('hidden');
+            document.getElementById('linesProcessed').textContent = `${parsed.length} linhas processadas`;
+
+            renderDashboard();
+            renderRecolocacoes();
+            renderCriminais();
+            renderChart();
+        }
+
+        function metricCard({ label, value, tone = 'text-zinc-400', valueSize = 'text-4xl sm:text-5xl' }) {
+            return `
+                <div class="card bg-zinc-900 rounded-3xl p-5 sm:p-6 text-center min-h-[140px] sm:min-h-[160px] flex flex-col justify-center">
+                    <div class="text-[11px] sm:text-xs ${tone} uppercase tracking-[0.14em]">${escapeHtml(label)}</div>
+                    <div class="metric-value ${valueSize} mt-4">${escapeHtml(String(value))}</div>
+                </div>
+            `;
+        }
+
+        function renderDashboard() {
+            const m = currentMetrics;
+            document.getElementById('preliminaresGrid').innerHTML = [
+                metricCard({ label: 'Dias efetivos', value: (m.preliminares.dias - 1), valueSize: 'text-4xl sm:text-5xl' }),
+                metricCard({ label: "CPA's", value: m.preliminares.cpa, valueSize: 'text-4xl sm:text-5xl' }),
+                metricCard({ label: "BPM's + CPP", value: m.preliminares.bpm, valueSize: 'text-3xl sm:text-4xl' }),
+                metricCard({ label: 'Localidades', value: m.preliminares.localidades, valueSize: 'text-4xl sm:text-5xl' }),
+                metricCard({ label: 'Municípios', value: m.preliminares.municipios, valueSize: 'text-4xl sm:text-5xl' }),
+                metricCard({ label: 'Vias (km)', value: m.preliminares.viasKm, valueSize: 'text-3xl sm:text-4xl' })
+            ].join('');
+
+            document.getElementById('remocoesGrid').innerHTML = [
+                metricCard({ label: 'Obstáculos', value: formatBR(m.remocoes.obstaculos), tone: 'text-rose-400', valueSize: 'text-5xl sm:text-6xl' }),
+                metricCard({ label: 'Vias liberadas', value: formatBR(m.remocoes.viasLiberadas), tone: 'text-emerald-400', valueSize: 'text-5xl sm:text-6xl' }),
+                metricCard({ label: 'Entulho', value: `${formatBR(m.remocoes.entulho)} t`, tone: 'text-amber-400', valueSize: 'text-4xl sm:text-6xl' })
+            ].join('');
+        }
+
+        function renderRecolocacoes() {
+            const m = currentMetrics;
+            document.getElementById('recolocacoesGrid').innerHTML = [
+                metricCard({ label: 'Denúncias', value: m.recolocacoes.denuncias, tone: 'text-amber-400', valueSize: 'text-5xl sm:text-6xl' }),
+                metricCard({ label: 'Taxa', value: m.recolocacoes.taxa, tone: 'text-amber-400', valueSize: 'text-5xl sm:text-6xl' }),
+                metricCard({ label: 'Eficiência', value: m.recolocacoes.eficiencia, tone: 'text-emerald-400', valueSize: 'text-4xl sm:text-6xl' }),
+                metricCard({ label: 'Facção', value: m.recolocacoes.faccao, tone: 'text-rose-400', valueSize: 'text-3xl sm:text-5xl' })
+            ].join('');
+        }
+
+        function renderCriminais() {
+            const m = currentMetrics;
+            document.getElementById('criminaisGrid').innerHTML = `
+                <div onclick="openCriminaisModal('fuzis')" class="card bg-zinc-900 rounded-3xl p-5 sm:p-8 text-center cursor-pointer min-h-[160px] flex flex-col justify-center">
+                    <div class="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-[0.14em]">Fuzis</div>
+                    <div class="metric-value text-5xl sm:text-6xl mt-4">${formatBR(m.criminais.fuzis)}</div>
+                    <div class="text-[11px] sm:text-xs text-zinc-600 mt-3">clique para detalhar</div>
+                </div>
+                <div onclick="openCriminaisModal('pistolas')" class="card bg-zinc-900 rounded-3xl p-5 sm:p-8 text-center cursor-pointer min-h-[160px] flex flex-col justify-center">
+                    <div class="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-[0.14em]">Pistolas</div>
+                    <div class="metric-value text-5xl sm:text-6xl mt-4">${formatBR(m.criminais.pistolas)}</div>
+                    <div class="text-[11px] sm:text-xs text-zinc-600 mt-3">clique para detalhar</div>
+                </div>
+                <div onclick="openCriminaisModal('prisoes')" class="card bg-zinc-900 rounded-3xl p-5 sm:p-8 text-center cursor-pointer min-h-[160px] flex flex-col justify-center">
+                    <div class="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-[0.14em]">Prisões</div>
+                    <div class="metric-value text-5xl sm:text-6xl mt-4">${formatBR(m.criminais.prisoes)}</div>
+                    <div class="text-[11px] sm:text-xs text-zinc-600 mt-3">clique para detalhar</div>
+                </div>
+            `;
+        }
+
+        function renderChart() {
+            if (!currentMetrics.topMunicipios) return;
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('municipiosChart');
+            if (!ctx) return;
+
+            const labels = currentMetrics.topMunicipios.map(m => m[0]);
+            const values = currentMetrics.topMunicipios.map(m => m[1]);
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#0ea5e9', '#06b6d4', '#10b981', '#38bdf8', '#22c55e'],
+                        borderRadius: 12,
+                        borderSkipped: false,
+                        maxBarThickness: 52
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: context => `${formatBR(context.raw)} t`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#cbd5e1',
+                                font: { size: window.innerWidth < 640 ? 10 : 12 },
+                                maxRotation: window.innerWidth < 640 ? 45 : 0,
+                                minRotation: window.innerWidth < 640 ? 45 : 0
+                            },
+                            grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: value => formatBR(value)
+                            },
+                            grid: { color: 'rgba(148, 163, 184, 0.12)' }
+                        }
+                    }
+                }
+            });
+
+            let listHTML = '<div class="space-y-2">';
+            currentMetrics.topMunicipios.forEach((m, i) => {
+                listHTML += `
+                    <div class="bg-zinc-950/70 border border-zinc-800 rounded-2xl px-4 py-3 flex items-center justify-between gap-4">
+                        <span class="text-sm text-zinc-300 min-w-0 truncate"><strong class="text-zinc-500 mr-1">${i + 1}.</strong>${escapeHtml(m[0])}</span>
+                        <span class="font-mono text-sm sm:text-base text-white flex-shrink-0">${formatBR(m[1])} t</span>
+                    </div>
+                `;
+            });
+            listHTML += '</div>';
+            document.getElementById('municipiosList').innerHTML = listHTML;
+        }
+
+        function openCriminaisModal(tipo) {
+            const reFuzis = /fuz/i;
+            const rePistolas = /pistol|revólv|revolv|submet/i;
+
+            const configs = {
+                fuzis: {
+                    titulo: 'Fuzis Apreendidos',
+                    subtitulo: 'Registros com fuzis – Aba REGISTROS',
+                    icon: 'fa-gun',
+                    cor: 'text-rose-400',
+                    filtro: r => reFuzis.test(r.armas)
+                },
+                pistolas: {
+                    titulo: 'Pistolas Apreendidas',
+                    subtitulo: 'Registros com pistolas/revólveres – Aba REGISTROS',
+                    icon: 'fa-shield-halved',
+                    cor: 'text-amber-400',
+                    filtro: r => rePistolas.test(r.armas)
+                },
+                prisoes: {
+                    titulo: 'Prisões em Flagrante',
+                    subtitulo: 'Registros com presos – Aba REGISTROS',
+                    icon: 'fa-handcuffs',
+                    cor: 'text-indigo-400',
+                    filtro: r => r.prisoes !== ''
+                }
+            };
+
+            const cfg = configs[tipo] || configs.fuzis;
+            const lista = registrosData.filter(cfg.filtro);
+
+            document.getElementById('criminaisModalTitle').innerHTML = `<i class="fa-solid ${cfg.icon} ${cfg.cor} mr-2"></i>${cfg.titulo}`;
+            document.getElementById('criminaisModalSubtitle').textContent = `${lista.length} registro${lista.length !== 1 ? 's' : ''} encontrado${lista.length !== 1 ? 's' : ''} · ${cfg.subtitulo}`;
+
+            if (lista.length === 0) {
+                document.getElementById('registrosList').innerHTML = '<p class="text-center text-zinc-500 py-16 text-sm">Nenhum registro encontrado para este filtro.</p>';
+            } else {
+                let html = '<div class="space-y-4">';
+                lista.forEach(r => {
+                    const badges = [];
+                    if (r.faccao) badges.push(`<span class="bg-rose-900/60 text-rose-300 text-xs px-2.5 py-1 rounded-full">${escapeHtml(r.faccao)}</span>`);
+                    if (r.depto) badges.push(`<span class="bg-zinc-700 text-zinc-300 text-xs px-2.5 py-1 rounded-full">${escapeHtml(r.depto)}</span>`);
+
+                    html += `
+                        <div class="bg-zinc-800 rounded-2xl p-4 sm:p-5 border border-zinc-700/50">
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
+                                <div class="flex items-center gap-2 flex-wrap min-w-0">
+                                    ${r.data ? `<span class="font-mono text-xs sm:text-sm font-semibold text-white bg-zinc-700 px-3 py-1 rounded-lg">${escapeHtml(r.data)}</span>` : ''}
+                                    ${r.dp ? `<span class="text-sm font-medium text-zinc-200 break-words">${escapeHtml(r.dp)}</span>` : ''}
+                                </div>
+                                ${r.regOcor ? `<span class="text-[11px] sm:text-xs font-mono text-zinc-500 bg-zinc-900 px-2.5 py-1 rounded-lg w-fit">${escapeHtml(r.regOcor)}</span>` : ''}
+                            </div>
+
+                            ${r.local ? `<div class="flex items-start gap-2 text-sm text-zinc-300 mb-2">
+                                <i class="fa-solid fa-location-dot text-zinc-500 w-4 mt-0.5 flex-shrink-0"></i>
+                                <span class="break-words">${escapeHtml(r.local)}</span>
+                            </div>` : ''}
+
+                            ${r.armas ? `<div class="flex items-start gap-2 text-sm mb-2">
+                                <i class="fa-solid fa-gun text-rose-400 w-4 mt-0.5 flex-shrink-0"></i>
+                                <span class="text-rose-200 font-medium break-words">${escapeHtml(r.armas)}</span>
+                            </div>` : ''}
+
+                            ${r.municoes ? `<div class="flex items-start gap-2 text-sm mb-2">
+                                <i class="fa-solid fa-circle-dot text-amber-400 w-4 mt-0.5 flex-shrink-0"></i>
+                                <span class="text-amber-200 break-words">${escapeHtml(r.municoes)}</span>
+                            </div>` : ''}
+
+                            ${r.drogas ? `<div class="flex items-start gap-2 text-sm mb-2">
+                                <i class="fa-solid fa-pills text-emerald-400 w-4 mt-0.5 flex-shrink-0"></i>
+                                <span class="text-emerald-200 break-words">${escapeHtml(r.drogas)}</span>
+                            </div>` : ''}
+
+                            ${r.prisoes ? `<div class="flex items-start gap-2 text-sm mb-2">
+                                <i class="fa-solid fa-handcuffs text-indigo-400 w-4 mt-0.5 flex-shrink-0"></i>
+                                <span class="text-indigo-200 font-medium break-words">${escapeHtml(r.prisoes)}</span>
+                            </div>` : ''}
+
+                            ${badges.length ? `<div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-zinc-700/50">${badges.join('')}</div>` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                document.getElementById('registrosList').innerHTML = html;
+            }
+
+            document.getElementById('criminaisModal').classList.remove('hidden');
+            setBodyLockState();
+        }
+
+        function closeCriminaisModal() {
+            document.getElementById('criminaisModal').classList.add('hidden');
+            setBodyLockState();
+        }
+
+        function generatePDFContent() {
+            const m = currentMetrics;
+            const dataAtual = new Date().toLocaleDateString('pt-BR');
+            const medalColors = ['#fbbf24', '#94a3b8', '#b45309', '#e2e8f0', '#e2e8f0'];
+            const medalText = ['white', 'white', 'white', '#64748b', '#64748b'];
+
+            const page1 = `
+                <div class="pdf-page">
+                    <div class="pdf-header">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+                            <div>
+                                <div style="font-size:1.6rem; font-weight:900; color:#0f172a; letter-spacing:-0.03em;">OPERAÇÃO BARRICADA ZERO</div>
+                                <div style="font-size:0.8rem; color:#64748b;">Resumo Operacional • PMERJ/PCERJ</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:0.65rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.08em;">Gerado em</div>
+                                <div style="font-family:'Roboto Mono',monospace; font-size:1rem; color:#0f172a; font-weight:600;">${dataAtual}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pdf-content">
+                        <div class="pdf-grid">
+                            <div class="pdf-card">
+                                <div class="pdf-card-title"><i class="fa-solid fa-chart-simple" style="color:#0ea5e9;"></i>Dados Preliminares</div>
+                                <div class="pdf-metric"><span>Dias efetivos:</span> <span>${m.preliminares.dias - 1}</span></div>
+                                <div class="pdf-metric"><span>CPA's:</span> <span>${m.preliminares.cpa}</span></div>
+                                <div class="pdf-metric"><span>BPM's + CPP:</span> <span>${m.preliminares.bpm}</span></div>
+                                <div class="pdf-metric"><span>Localidades:</span> <span>${formatBR(m.preliminares.localidades)}</span></div>
+                                <div class="pdf-metric"><span>Municípios:</span> <span>${m.preliminares.municipios}</span></div>
+                                <div class="pdf-metric"><span>Vias (km):</span> <span>${m.preliminares.viasKm}</span></div>
+                            </div>
+                            <div class="pdf-card">
+                                <div class="pdf-card-title"><i class="fa-solid fa-trash-can" style="color:#e11d48;"></i>Remoções</div>
+                                <div class="pdf-metric"><span>Obstáculos removidos:</span> <span>${formatBR(m.remocoes.obstaculos)}</span></div>
+                                <div class="pdf-metric"><span>Vias liberadas:</span> <span>${formatBR(m.remocoes.viasLiberadas)}</span></div>
+                                <div class="pdf-metric"><span>Entulho removido:</span> <span>${formatBR(m.remocoes.entulho)} t</span></div>
+                                <div class="pdf-metric"><span>Equivalente Cristo:</span> <span>${m.remocoes.cristo}x</span></div>
+                            </div>
+                            <div class="pdf-card">
+                                <div class="pdf-card-title"><i class="fa-solid fa-rotate" style="color:#d97706;"></i>Recolocações</div>
+                                <div class="pdf-metric"><span>Denúncias recebidas:</span> <span>${formatBR(m.recolocacoes.denuncias)}</span></div>
+                                <div class="pdf-metric"><span>Taxa de recolocação:</span> <span>${m.recolocacoes.taxa}</span></div>
+                                <div class="pdf-metric"><span>Eficiência:</span> <span>${m.recolocacoes.eficiencia}</span></div>
+                                <div class="pdf-metric"><span>Facção predominante:</span> <span>${m.recolocacoes.faccao}</span></div>
+                            </div>
+                            <div class="pdf-card">
+                                <div class="pdf-card-title"><i class="fa-solid fa-handcuffs" style="color:#4f46e5;"></i>Registros Criminais</div>
+                                <div class="pdf-metric"><span>Fuzis apreendidos:</span> <span>${formatBR(m.criminais.fuzis)}</span></div>
+                                <div class="pdf-metric"><span>Pistolas apreendidas:</span> <span>${formatBR(m.criminais.pistolas)}</span></div>
+                                <div class="pdf-metric"><span>Prisões em flagrante:</span> <span>${formatBR(m.criminais.prisoes)}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pdf-footer">Operação Barricada Zero • 2025/2026 • Página 1 de 2</div>
+                </div>
+            `;
+
+            const rankingRows = m.topMunicipios.map((mun, i) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:0.75rem 0; border-bottom:1.5px solid #e2e8f0; font-size:0.95rem;">
+                    <span style="display:flex; align-items:center; gap:0.75rem; min-width:0;">
+                        <span style="background:${medalColors[i]}; color:${medalText[i]}; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; flex-shrink:0;">${i + 1}</span>
+                        <span style="font-weight:600; color:#0f172a;">${mun[0]}</span>
+                    </span>
+                    <span style="font-family:'Roboto Mono',monospace; font-size:1rem; color:#0ea5e9; font-weight:700; flex-shrink:0;">${formatBR(mun[1])} t</span>
+                </div>
+            `).join('');
+
+            const page2 = `
+                <div class="pdf-page">
+                    <div class="pdf-header">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+                            <div>
+                                <div style="font-size:1.6rem; font-weight:900; color:#0f172a; letter-spacing:-0.03em;">OPERAÇÃO BARRICADA ZERO</div>
+                                <div style="font-size:0.8rem; color:#64748b;">Resumo Operacional • PMERJ/PCERJ</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:0.65rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.08em;">Gerado em</div>
+                                <div style="font-family:'Roboto Mono',monospace; font-size:1rem; color:#0f172a; font-weight:600;">${dataAtual}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pdf-content">
+                        <div class="pdf-card" style="height:100%; box-sizing:border-box;">
+                            <div class="pdf-card-title" style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-ranking-star" style="color:#10b981;"></i>Top 5 Municípios por Toneladas Removidas</div>
+                            ${rankingRows}
+                            <div style="margin-top:1.5rem; padding:1rem 1.25rem; background:#f1f5f9; border-radius:0.6rem; border-left:4px solid #0ea5e9;">
+                                <div style="font-size:0.82rem; color:#475569; line-height:1.7;">
+                                    <strong>Total geral removido:</strong> ${formatBR(m.remocoes.entulho)} toneladas &nbsp;|&nbsp;
+                                    <strong>Média por município:</strong> ${formatBR(m.remocoes.entulho / (m.topMunicipios.length || 1))} toneladas
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pdf-footer">Operação Barricada Zero • 2025/2026 • Página 2 de 2</div>
+                </div>
+            `;
+
+            return page1 + page2;
+        }
+
+        function generateAndShowPDF() {
+            const content = generatePDFContent();
+            document.getElementById('pdfPreviewContainer').innerHTML = `<div class="a4-preview">${content}</div>`;
+            document.getElementById('pdfModal').classList.remove('hidden');
+            setBodyLockState();
+        }
+
+        function closePdfModal() {
+            document.getElementById('pdfModal').classList.add('hidden');
+            setBodyLockState();
+        }
+
+        function exportToPDF() {
+            const content = generatePDFContent();
+            const printRoot = document.getElementById('pdfPrintRoot');
+            printRoot.style.display = 'block';
+            printRoot.innerHTML = content;
+
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    printRoot.style.display = 'none';
+                    printRoot.innerHTML = '';
+                }, 1000);
+            }, 150);
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) closeSidebar();
+            if (chartInstance) renderChart();
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+                closeCriminaisModal();
+                closePdfModal();
+            }
+        });
+
+        window.onload = () => {
+            switchSection('dashboard');
+            setBodyLockState();
+        };
+    </script>
+</body>
+</html>
