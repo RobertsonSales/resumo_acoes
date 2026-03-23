@@ -563,7 +563,6 @@
 
     <div id="pdfPrintRoot" style="display:none;"></div>
 
-    <!-- Progress overlay -->
     <div id="progressOverlay" class="hidden fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6" style="background:rgba(9,9,11,0.88);backdrop-filter:blur(6px);">
         <i class="fa-solid fa-file-excel text-5xl text-emerald-400 animate-pulse"></i>
         <div class="text-center">
@@ -584,6 +583,12 @@
         function formatBR(num) {
             if (num === undefined || num === null || Number.isNaN(num)) return '';
             return Number(num).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        // Helper para exibir número com exatamente 1 casa decimal (formato pt-BR)
+        function formatOneDecimal(num) {
+            if (num === undefined || num === null || Number.isNaN(num)) return '';
+            return Number(num).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
         }
 
         function safeText(value, fallback = '') {
@@ -768,6 +773,10 @@
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5);
 
+            // Cálculo Vias (km) com 1 casa decimal
+            const viasKmNum = (totalMetrosVias * TAXA) / 1000;
+            const viasKmFormatted = viasKmNum.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
             currentMetrics = {
                 preliminares: {
                     dias: diasEfetivos,
@@ -775,12 +784,13 @@
                     bpm: '21 + CPP',
                     localidades: 227,
                     municipios: Object.keys(pesoPorMun).length,
-                    viasKm: ((totalMetrosVias * TAXA) / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+                    viasKm: viasKmFormatted
                 },
                 remocoes: {
                     obstaculos: totalRemocoes,
                     viasLiberadas: totalVias,
                     entulho: totalPeso,
+                    entulhoFormatted: formatOneDecimal(totalPeso),
                     cristo: (totalPeso / 1150).toFixed(1)
                 },
                 recolocacoes: {
@@ -847,7 +857,7 @@
             document.getElementById('remocoesGrid').innerHTML = [
                 metricCard({ label: 'Obstáculos', value: formatBR(m.remocoes.obstaculos), tone: 'text-rose-400', valueSize: 'text-5xl sm:text-6xl' }),
                 metricCard({ label: 'Vias liberadas', value: formatBR(m.remocoes.viasLiberadas), tone: 'text-emerald-400', valueSize: 'text-5xl sm:text-6xl' }),
-                metricCard({ label: 'Entulho', value: `${formatBR(m.remocoes.entulho)} t`, tone: 'text-amber-400', valueSize: 'text-4xl sm:text-6xl' })
+                metricCard({ label: 'Entulho', value: m.remocoes.entulhoFormatted, tone: 'text-amber-400', valueSize: 'text-4xl sm:text-6xl' })
             ].join('');
         }
 
@@ -1079,7 +1089,7 @@
                                 <div class="pdf-card-title"><i class="fa-solid fa-trash-can" style="color:#e11d48;"></i>Remoções</div>
                                 <div class="pdf-metric"><span>Obstáculos removidos:</span> <span>${formatBR(m.remocoes.obstaculos)}</span></div>
                                 <div class="pdf-metric"><span>Vias liberadas:</span> <span>${formatBR(m.remocoes.viasLiberadas)}</span></div>
-                                <div class="pdf-metric"><span>Entulho removido:</span> <span>${formatBR(m.remocoes.entulho)} t</span></div>
+                                <div class="pdf-metric"><span>Entulho removido:</span> <span>${m.remocoes.entulhoFormatted} t</span></div>
                                 <div class="pdf-metric"><span>Equivalente Cristo:</span> <span>${m.remocoes.cristo}x</span></div>
                             </div>
                             <div class="pdf-card">
@@ -1131,8 +1141,8 @@
                             ${rankingRows}
                             <div style="margin-top:1.5rem; padding:1rem 1.25rem; background:#f1f5f9; border-radius:0.6rem; border-left:4px solid #0ea5e9;">
                                 <div style="font-size:0.82rem; color:#475569; line-height:1.7;">
-                                    <strong>Total geral removido:</strong> ${formatBR(m.remocoes.entulho)} toneladas &nbsp;|&nbsp;
-                                    <strong>Média por município:</strong> ${formatBR(m.remocoes.entulho / (m.topMunicipios.length || 1))} toneladas
+                                    <strong>Total geral removido:</strong> ${m.remocoes.entulhoFormatted} toneladas &nbsp;|&nbsp;
+                                    <strong>Média por município:</strong> ${formatOneDecimal(m.remocoes.entulho / (m.topMunicipios.length || 1))} toneladas
                                 </div>
                             </div>
                         </div>
