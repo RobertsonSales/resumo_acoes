@@ -192,6 +192,7 @@
             box-shadow: 0 30px 80px -30px rgba(0,0,0,0.7);
         }
 
+        /* ===== ESTILOS DO PDF (copiados do Resumo_Extrato) ===== */
         .pdf-page {
             width: 297mm;
             height: 210mm;
@@ -209,57 +210,60 @@
 
         .pdf-content {
             flex: 1;
-            padding: 1.2cm 1.5cm;
+            padding: 0.6cm 1.2cm;
             overflow: hidden;
         }
 
         .pdf-header {
-            padding: 0.8cm 1.5cm 0.5cm 1.5cm;
-            border-bottom: 2px solid #e2e8f0;
+            padding: 0.5cm 1.2cm 0.3cm 1.2cm;
+            border-bottom: 3px solid #0ea5e9;
             background: white;
         }
 
         .pdf-footer {
-            padding: 0.3cm 1.5cm;
+            padding: 0.2cm 1.2cm;
             border-top: 1px solid #e2e8f0;
             text-align: center;
             font-size: 9pt;
-            color: #94a3b8;
+            color: #64748b;
             background: white;
         }
 
         .pdf-card {
             background: #f8fafc;
-            border-radius: 0.75rem;
-            padding: 1rem 1.25rem;
+            border-radius: 1rem;
+            padding: 0.9rem 1rem;
             border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
         }
 
         .pdf-card-title {
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-weight: 700;
             color: #0f172a;
             margin-bottom: 0.6rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
         }
 
-        .pdf-card-title i { color: #0ea5e9; }
+        .pdf-card-title i { font-size: 1rem; }
 
         .pdf-metric {
             display: flex;
             justify-content: space-between;
             gap: 1rem;
-            padding: 0.3rem 0;
+            padding: 0.4rem 0;
             border-bottom: 1px dashed #cbd5e1;
-            font-size: 0.82rem;
+            font-size: 0.75rem;
         }
 
         .pdf-metric:last-child { border-bottom: none; }
-        .pdf-metric span:first-child { color: #334155; }
+        .pdf-metric span:first-child { color: #334155; font-weight: 500; }
         .pdf-metric span:last-child {
-            font-weight: 700;
+            font-weight: 800;
             color: #0f172a;
             font-family: 'Roboto Mono', monospace;
             text-align: right;
@@ -268,10 +272,69 @@
         .pdf-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 0.85rem;
+            gap: 0.7rem;
         }
 
         .pdf-full-width { grid-column: 1 / -1; }
+
+        .insight-card {
+            background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            border-left: 4px solid #0ea5e9;
+            border-radius: 0.75rem;
+            padding: 0.6rem 0.9rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .insight-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: #1e293b;
+            letter-spacing: 0.03em;
+        }
+
+        .insight-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.2;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .bar-chart-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.8rem;
+        }
+        .bar-label {
+            width: 30%;
+            font-size: 0.7rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .bar-bg {
+            flex: 1;
+            height: 22px;
+            background-color: #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0ea5e9, #10b981);
+            border-radius: 12px;
+            width: 0%;
+        }
+        .bar-value {
+            min-width: 45px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            font-family: monospace;
+            text-align: right;
+        }
 
         .a4-preview {
             background: #e5e7eb;
@@ -585,7 +648,6 @@
             return Number(num).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
         }
 
-        // Helper para exibir número com exatamente 1 casa decimal (formato pt-BR)
         function formatOneDecimal(num) {
             if (num === undefined || num === null || Number.isNaN(num)) return '';
             return Number(num).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -773,7 +835,6 @@
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5);
 
-            // Cálculo Vias (km) com 1 casa decimal
             const viasKmNum = (totalMetrosVias * TAXA) / 1000;
             const viasKmFormatted = viasKmNum.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
@@ -851,7 +912,7 @@
                 metricCard({ label: "BPM's + CPP", value: m.preliminares.bpm, valueSize: 'text-3xl sm:text-4xl' }),
                 metricCard({ label: 'Localidades', value: m.preliminares.localidades, valueSize: 'text-4xl sm:text-5xl' }),
                 metricCard({ label: 'Municípios', value: m.preliminares.municipios, valueSize: 'text-4xl sm:text-5xl' }),
-                metricCard({ label: 'Vias (km)', value: m.preliminares.viasKm, valueSize: 'text-3xl sm:text-4xl' })
+                metricCard({ label: 'Vias Mapeadas (km)', value: m.preliminares.viasKm, valueSize: 'text-3xl sm:text-4xl' })
             ].join('');
 
             document.getElementById('remocoesGrid').innerHTML = [
@@ -1054,104 +1115,89 @@
             setBodyLockState();
         }
 
+        // ===== GERAÇÃO DO PDF (copiada do Resumo_Extrato) =====
         function generatePDFContent() {
             const m = currentMetrics;
             const dataAtual = new Date().toLocaleDateString('pt-BR');
-            const medalColors = ['#fbbf24', '#94a3b8', '#b45309', '#e2e8f0', '#e2e8f0'];
-            const medalText = ['white', 'white', 'white', '#64748b', '#64748b'];
+            const totalArmas = m.criminais.fuzis + m.criminais.pistolas;
+            const mediaTonPorDia = (m.remocoes.entulho / (m.preliminares.dias - 1)).toFixed(1);
+            const top1Municipio = m.topMunicipios.length ? m.topMunicipios[0][0] : '—';
+            const maxTon = m.topMunicipios.length ? m.topMunicipios[0][1] : 0;
 
-            const page1 = `
+            const rankingBars = m.topMunicipios.map((mun, idx) => {
+                const percent = (mun[1] / maxTon) * 100;
+                return `
+                    <div class="bar-chart-row">
+                        <span class="bar-label">${idx+1}. ${mun[0]}</span>
+                        <div class="bar-bg"><div class="bar-fill" style="width: ${percent}%;"></div></div>
+                        <span class="bar-value">${formatBR(mun[1])} t</span>
+                    </div>
+                `;
+            }).join('');
+
+            return `
                 <div class="pdf-page">
                     <div class="pdf-header">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
                             <div>
-                                <div style="font-size:1.6rem; font-weight:900; color:#0f172a; letter-spacing:-0.03em;">OPERAÇÃO BARRICADA ZERO</div>
-                                <div style="font-size:0.8rem; color:#64748b;">Resumo Operacional • PMERJ/PCERJ</div>
+                                <div style="font-size:1.8rem; font-weight:900; color:#0f172a;">BARRICADA ZERO</div>
+                                <div style="font-size:0.7rem; color:#475569;">Resumo Operacional • PMERJ/PCERJ</div>
                             </div>
-                            <div style="text-align:right;">
-                                <div style="font-size:0.65rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.08em;">Gerado em</div>
-                                <div style="font-family:'Roboto Mono',monospace; font-size:1rem; color:#0f172a; font-weight:600;">${dataAtual}</div>
-                            </div>
+                            <div style="text-align:right;"><div style="font-size:0.6rem; color:#64748b;">Gerado em</div><div style="font-family:monospace; font-weight:700;">${dataAtual}</div></div>
                         </div>
                     </div>
                     <div class="pdf-content">
                         <div class="pdf-grid">
-                            <div class="pdf-card">
-                                <div class="pdf-card-title"><i class="fa-solid fa-chart-simple" style="color:#0ea5e9;"></i>Dados Preliminares</div>
-                                <div class="pdf-metric"><span>Dias efetivos:</span> <span>${m.preliminares.dias - 1}</span></div>
-                                <div class="pdf-metric"><span>CPA's:</span> <span>${m.preliminares.cpa}</span></div>
-                                <div class="pdf-metric"><span>BPM's + CPP:</span> <span>${m.preliminares.bpm}</span></div>
-                                <div class="pdf-metric"><span>Localidades:</span> <span>${formatBR(m.preliminares.localidades)}</span></div>
-                                <div class="pdf-metric"><span>Municípios:</span> <span>${m.preliminares.municipios}</span></div>
-                                <div class="pdf-metric"><span>Vias (km):</span> <span>${m.preliminares.viasKm}</span></div>
+                            <div class="pdf-card"><div class="pdf-card-title"><i class="fa-solid fa-chart-line"></i> DADOS PRELIMINARES</div>
+                                <div class="pdf-metric"><span>Dias efetivos:</span><span>${m.preliminares.dias - 1}</span></div>
+                                <div class="pdf-metric"><span>Municípios atendidos:</span><span>${m.preliminares.municipios}</span></div>
+                                <div class="pdf-metric"><span>Localidades:</span><span>${formatBR(m.preliminares.localidades)}</span></div>
+                                <div class="pdf-metric"><span>Vias já mapeadas (com geolocalização) (km):</span><span>${m.preliminares.viasKm}</span></div>
                             </div>
-                            <div class="pdf-card">
-                                <div class="pdf-card-title"><i class="fa-solid fa-trash-can" style="color:#e11d48;"></i>Remoções</div>
-                                <div class="pdf-metric"><span>Obstáculos removidos:</span> <span>${formatBR(m.remocoes.obstaculos)}</span></div>
-                                <div class="pdf-metric"><span>Vias liberadas:</span> <span>${formatBR(m.remocoes.viasLiberadas)}</span></div>
-                                <div class="pdf-metric"><span>Entulho removido:</span> <span>${m.remocoes.entulhoFormatted} t</span></div>
-                                <div class="pdf-metric"><span>Equivalente Cristo:</span> <span>${m.remocoes.cristo}x</span></div>
+                            <div class="pdf-card"><div class="pdf-card-title"><i class="fa-solid fa-trash-can"></i> REMOÇÕES</div>
+                                <div class="pdf-metric"><span>Obstáculos removidos:</span><span>${formatBR(m.remocoes.obstaculos)}</span></div>
+                                <div class="pdf-metric"><span>Vias liberadas:</span><span>${formatBR(m.remocoes.viasLiberadas)}</span></div>
+                                <div class="pdf-metric"><span>Entulho removido:</span><span>${m.remocoes.entulhoFormatted} t</span></div>
+                                <div class="pdf-metric"><span>Equivalente Cristo:</span><span>${m.remocoes.cristo}x</span></div>
                             </div>
-                            <div class="pdf-card">
-                                <div class="pdf-card-title"><i class="fa-solid fa-rotate" style="color:#d97706;"></i>Recolocações</div>
-                                <div class="pdf-metric"><span>Denúncias recebidas:</span> <span>${formatBR(m.recolocacoes.denuncias)}</span></div>
-                                <div class="pdf-metric"><span>Taxa de recolocação:</span> <span>${m.recolocacoes.taxa}</span></div>
-                                <div class="pdf-metric"><span>Eficiência:</span> <span>${m.recolocacoes.eficiencia}</span></div>
-                                <div class="pdf-metric"><span>Facção predominante:</span> <span>${m.recolocacoes.faccao}</span></div>
+                            <div class="pdf-card"><div class="pdf-card-title"><i class="fa-solid fa-rotate"></i> RECOLOCAÇÕES</div>
+                                <div class="pdf-metric"><span>Denúncias:</span><span>${formatBR(m.recolocacoes.denuncias)}</span></div>
+                                <div class="pdf-metric"><span>Taxa de recolocação:</span><span>${m.recolocacoes.taxa}</span></div>
+                                <div class="pdf-metric"><span>Eficiência:</span><span>${m.recolocacoes.eficiencia}</span></div>
+                                <div class="pdf-metric"><span>Facção predominante:</span><span>${m.recolocacoes.faccao}</span></div>
                             </div>
-                            <div class="pdf-card">
-                                <div class="pdf-card-title"><i class="fa-solid fa-handcuffs" style="color:#4f46e5;"></i>Registros Criminais</div>
-                                <div class="pdf-metric"><span>Fuzis apreendidos:</span> <span>${formatBR(m.criminais.fuzis)}</span></div>
-                                <div class="pdf-metric"><span>Pistolas apreendidas:</span> <span>${formatBR(m.criminais.pistolas)}</span></div>
-                                <div class="pdf-metric"><span>Prisões em flagrante:</span> <span>${formatBR(m.criminais.prisoes)}</span></div>
+                            <div class="pdf-card"><div class="pdf-card-title"><i class="fa-solid fa-handcuffs"></i> CRIMINAIS</div>
+                                <div class="pdf-metric"><span>Fuzis apreendidos:</span><span>${formatBR(m.criminais.fuzis)}</span></div>
+                                <div class="pdf-metric"><span>Pistolas apreendidas:</span><span>${formatBR(m.criminais.pistolas)}</span></div>
+                                <div class="pdf-metric"><span>Total de armas:</span><span>${formatBR(totalArmas)}</span></div>
+                                <div class="pdf-metric"><span>Prisões em flagrante:</span><span>${formatBR(m.criminais.prisoes)}</span></div>
+                            </div>
+                        </div>
+                        <div class="pdf-full-width" style="margin-top: 0.6rem;">
+                            <div class="insight-card"><div class="insight-title"><i class="fa-regular fa-lightbulb"></i> INSIGHTS OPERACIONAIS</div>
+                                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; margin-top:0.4rem;">
+                                    <div><div class="insight-title">Média diária</div><div class="insight-value">${mediaTonPorDia} t/dia</div></div>
+                                    <div><div class="insight-title">Maior remoção</div><div class="insight-value">${top1Municipio}</div></div>
+                                    <div><div class="insight-title">Eficiência</div><div class="insight-value">${m.recolocacoes.eficiencia}</div></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="pdf-footer">Operação Barricada Zero • 2025/2026 • Página 1 de 2</div>
                 </div>
-            `;
-
-            const rankingRows = m.topMunicipios.map((mun, i) => `
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:0.75rem 0; border-bottom:1.5px solid #e2e8f0; font-size:0.95rem;">
-                    <span style="display:flex; align-items:center; gap:0.75rem; min-width:0;">
-                        <span style="background:${medalColors[i]}; color:${medalText[i]}; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; flex-shrink:0;">${i + 1}</span>
-                        <span style="font-weight:600; color:#0f172a;">${mun[0]}</span>
-                    </span>
-                    <span style="font-family:'Roboto Mono',monospace; font-size:1rem; color:#0ea5e9; font-weight:700; flex-shrink:0;">${formatBR(mun[1])} t</span>
-                </div>
-            `).join('');
-
-            const page2 = `
                 <div class="pdf-page">
-                    <div class="pdf-header">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
-                            <div>
-                                <div style="font-size:1.6rem; font-weight:900; color:#0f172a; letter-spacing:-0.03em;">OPERAÇÃO BARRICADA ZERO</div>
-                                <div style="font-size:0.8rem; color:#64748b;">Resumo Operacional • PMERJ/PCERJ</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div style="font-size:0.65rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.08em;">Gerado em</div>
-                                <div style="font-family:'Roboto Mono',monospace; font-size:1rem; color:#0f172a; font-weight:600;">${dataAtual}</div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="pdf-header"><div style="font-weight:800; font-size:1.2rem;">TOP 5 MUNICÍPIOS POR TONELADAS REMOVIDAS</div></div>
                     <div class="pdf-content">
-                        <div class="pdf-card" style="height:100%; box-sizing:border-box;">
-                            <div class="pdf-card-title" style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-ranking-star" style="color:#10b981;"></i>Top 5 Municípios por Toneladas Removidas</div>
-                            ${rankingRows}
-                            <div style="margin-top:1.5rem; padding:1rem 1.25rem; background:#f1f5f9; border-radius:0.6rem; border-left:4px solid #0ea5e9;">
-                                <div style="font-size:0.82rem; color:#475569; line-height:1.7;">
-                                    <strong>Total geral removido:</strong> ${m.remocoes.entulhoFormatted} toneladas &nbsp;|&nbsp;
-                                    <strong>Média por município:</strong> ${formatOneDecimal(m.remocoes.entulho / (m.topMunicipios.length || 1))} toneladas
-                                </div>
+                        <div class="pdf-card" style="padding:0.8rem 1rem;">${rankingBars}</div>
+                        <div class="pdf-full-width" style="margin-top:0.8rem;">
+                            <div class="pdf-card"><div class="pdf-card-title"><i class="fa-solid fa-chart-simple"></i> IMPACTO ESTRATÉGICO</div>
+                                <div style="font-size:0.7rem; line-height:1.5; color:#1e293b;">✔ ${m.topMunicipios.length} municípios lideram o esforço de remoção de barricadas.<br>✔ Mais de ${formatBR(m.remocoes.obstaculos)} obstáculos removidos, garantindo acesso a comunidades.<br>✔ A ação integrada reduziu significativamente a circulação de armas e drogas.</div>
                             </div>
                         </div>
                     </div>
                     <div class="pdf-footer">Operação Barricada Zero • 2025/2026 • Página 2 de 2</div>
                 </div>
             `;
-
-            return page1 + page2;
         }
 
         function generateAndShowPDF() {
