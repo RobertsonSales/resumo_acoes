@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;600&display=swap');
 
@@ -658,7 +660,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 lg:gap-3">
                     <span class="text-[11px] sm:text-xs text-zinc-500">
                         <i class="fa-solid fa-info-circle mr-1"></i>
-                        Selecione "Salvar como PDF" na caixa de impressão
+                        O arquivo PDF será gerado com o conteúdo exibido na visualização
                     </span>
                     <div class="flex items-center gap-2 sm:gap-3">
                         <button id="exportPdfBtn" onclick="exportToPDF()"
@@ -675,6 +677,7 @@
     </div>
 
     <div id="pdfPrintRoot" style="display:none;"></div>
+    <div id="pdfRenderRoot" aria-hidden="true" style="position:fixed;left:-200vw;top:0;pointer-events:none;opacity:0;z-index:-1;"></div>
 
     <div id="progressOverlay" class="hidden fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6" style="background:rgba(9,9,11,0.88);backdrop-filter:blur(6px);">
         <i class="fa-solid fa-file-excel text-5xl text-emerald-400 animate-pulse"></i>
@@ -1262,145 +1265,119 @@
             setBodyLockState();
         }
 
-        function buildPrintDocument(content) {
-            const headMarkup = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-                .map(node => node.outerHTML)
-                .join('\n');
-
-            return `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Relatório A4 • Operação Barricada Zero</title>
-    ${headMarkup}
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            background: #ffffff;
+        function getPdfFilename() {
+            const data = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+            return `Relatorio_Barricada_Zero_${data}.pdf`;
         }
 
-        body {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            color-adjust: exact !important;
+        function syncPdfRenderRoot(content) {
+            const renderRoot = document.getElementById('pdfRenderRoot');
+            renderRoot.innerHTML = content;
+            renderRoot.style.width = '297mm';
+            return renderRoot;
         }
 
-        #printApp {
-            display: block;
+        function waitForPdfRender() {
+            const fontPromise = document.fonts && document.fonts.ready
+                ? document.fonts.ready.catch(() => {})
+                : Promise.resolve();
+
+            return Promise.all([
+                fontPromise,
+                new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+                new Promise(resolve => setTimeout(resolve, 220))
+            ]);
         }
 
-        @media screen {
-            body {
-                background: #e5e7eb;
-                padding: 24px;
-            }
-
-            #printApp {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 24px;
-            }
-
-            .pdf-page {
-                box-shadow: 0 10px 40px -8px rgba(0, 0, 0, 0.35);
-            }
-        }
-
-        @media print {
-            body {
-                background: #ffffff !important;
-                padding: 0 !important;
-            }
-
-            #printApp {
-                display: block !important;
-            }
-
-            .pdf-page + .pdf-page {
-                margin-top: 0 !important;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div id="printApp">${content}</div>
-    <script>
-        (function () {
-            function waitForStyles() {
-                const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
-                return Promise.all(links.map(link => new Promise(resolve => {
-                    if (link.sheet) {
-                        resolve();
-                        return;
-                    }
-                    const done = () => resolve();
-                    link.addEventListener('load', done, { once: true });
-                    link.addEventListener('error', done, { once: true });
-                    setTimeout(done, 1800);
-                })));
-            }
-
-            function triggerPrint() {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        window.focus();
-                        window.print();
-                    });
-                });
-            }
-
-            Promise.all([
-                waitForStyles(),
-                document.fonts && document.fonts.ready ? document.fonts.ready.catch(() => {}) : Promise.resolve()
-            ]).finally(() => {
-                setTimeout(triggerPrint, 350);
-            });
-
-            window.addEventListener('afterprint', () => {
-                setTimeout(() => window.close(), 120);
-            }, { once: true });
-        })();
-    <\/script>
-</body>
-</html>`;
-        }
-
-        function fallbackInlinePrint(content) {
-            const printRoot = document.getElementById('pdfPrintRoot');
-            const cleanup = () => {
-                printRoot.style.display = 'none';
-                printRoot.innerHTML = '';
-                window.removeEventListener('afterprint', cleanup);
-            };
-
-            printRoot.innerHTML = content;
-            printRoot.style.display = 'block';
-
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    window.addEventListener('afterprint', cleanup, { once: true });
-                    window.print();
-                    setTimeout(cleanup, 1800);
-                });
-            });
-        }
-
-        function exportToPDF() {
-            const content = generatePDFContent();
-            const printWindow = window.open('', '_blank', 'noopener,noreferrer');
-
-            if (printWindow) {
-                printWindow.document.open();
-                printWindow.document.write(buildPrintDocument(content));
-                printWindow.document.close();
-                closePdfModal();
+        async function exportToPDF() {
+            if (!currentMetrics) {
+                alert('Importe uma planilha antes de exportar o relatório.');
                 return;
             }
 
-            fallbackInlinePrint(content);
+            if (!window.html2canvas || !window.jspdf) {
+                alert('Os recursos de exportação do PDF não foram carregados. Recarregue a página e tente novamente.');
+                return;
+            }
+
+            const btn = document.getElementById('exportPdfBtn');
+            const originalMarkup = btn.innerHTML;
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> GERANDO PDF...';
+
+            const content = generatePDFContent();
+            const renderRoot = syncPdfRenderRoot(content);
+
+            try {
+                await waitForPdfRender();
+
+                const pages = Array.from(renderRoot.querySelectorAll('.pdf-page'));
+                if (!pages.length) {
+                    throw new Error('Nenhuma página foi preparada para exportação.');
+                }
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4',
+                    compress: true
+                });
+
+                for (let i = 0; i < pages.length; i++) {
+                    const page = pages[i];
+                    const canvas = await html2canvas(page, {
+                        scale: Math.min(Math.max(window.devicePixelRatio || 2, 2), 3),
+                        backgroundColor: '#ffffff',
+                        useCORS: true,
+                        allowTaint: true,
+                        logging: false,
+                        width: page.scrollWidth,
+                        height: page.scrollHeight,
+                        windowWidth: page.scrollWidth,
+                        windowHeight: page.scrollHeight,
+                        scrollX: 0,
+                        scrollY: 0
+                    });
+
+                    const imgData = canvas.toDataURL('image/jpeg', 0.96);
+                    if (i > 0) pdf.addPage('a4', 'landscape');
+                    pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210, `page-${i + 1}`, 'FAST');
+                }
+
+                const fileName = getPdfFilename();
+                const isMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+                const blob = pdf.output('blob');
+
+                if (isMobile && navigator.share && typeof File === 'function') {
+                    const file = new File([blob], fileName, { type: 'application/pdf' });
+                    try {
+                        await navigator.share({ files: [file], title: fileName });
+                    } catch (shareError) {
+                        const blobUrl = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = blobUrl;
+                        link.download = fileName;
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+                    }
+                } else {
+                    pdf.save(fileName);
+                }
+
+                closePdfModal();
+            } catch (error) {
+                console.error(error);
+                alert('Não foi possível gerar o PDF. Tente novamente após recarregar a página.');
+            } finally {
+                renderRoot.innerHTML = '';
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                btn.innerHTML = originalMarkup;
+            }
         }
 
         window.addEventListener('resize', () => {
