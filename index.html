@@ -2,1248 +2,387 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Dashboard • Operação Barricada Zero</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>RCT-PJ • Rescisão Contratual PJ</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;600&display=swap');
-
-        :root {
-            color-scheme: dark;
-            --bg: #0a0a0a;
-            --bg-soft: #09090b;
-            --panel: #18181b;
-            --panel-soft: #111827;
-            --border: #27272a;
-            --text: #f1f5f9;
-            --muted: #94a3b8;
-            --sky: #0ea5e9;
-            --emerald: #10b981;
-            --rose: #f43f5e;
-            --amber: #f59e0b;
-            --indigo: #6366f1;
-            --sidebar-width: 18rem;
-            --header-height: 4.75rem;
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: 'Inter', system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        body.sidebar-open,
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        .metric-value {
-            font-family: 'Roboto Mono', monospace;
-            font-weight: 600;
-            line-height: 1;
-            word-break: break-word;
-        }
-
-        .card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-            border: 1px solid rgba(63, 63, 70, 0.55);
-        }
-
-        .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.45);
-            border-color: rgba(14, 165, 233, 0.35);
-        }
-
-        .section-header::after {
-            content: '';
-            position: absolute;
-            bottom: -0.4rem;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            border-radius: 999px;
-            background: linear-gradient(to right, #0ea5e9, #22c55e);
-        }
-
-        .empty-state {
-            border: 3px dashed #27272a;
-            background: linear-gradient(180deg, rgba(24,24,27,0.48) 0%, rgba(9,9,11,0.88) 100%);
-        }
-
-        .app-shell {
-            min-height: 100vh;
-            display: flex;
-            background: var(--bg);
-        }
-
-        .sidebar {
-            width: var(--sidebar-width);
-            background: #18181b;
-            border-right: 1px solid #27272a;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            z-index: 80;
-        }
-
-        .sidebar-link {
-            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-        }
-
-        .sidebar-link:hover {
-            transform: translateX(2px);
-        }
-
-        .sidebar-overlay {
+        * { font-family: 'Inter', system-ui, sans-serif; box-sizing: border-box; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%); background-size: 400% 400%; animation: gradientShift 15s ease infinite; }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .gradient-primary { background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #8b5cf6 100%); }
+        .gradient-success { background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%); }
+        .glass { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .input-premium { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); border: 2px solid #e2e8f0; font-size: 1rem; }
+        .input-premium:focus { border-color: #8b5cf6; box-shadow: 0 0 0 4px rgba(139,92,246,0.15); transform: translateY(-2px); }
+        .input-moeda { font-size: 1.25rem !important; font-weight: 700; color: #1e293b; letter-spacing: 0.5px; }
+        .moeda-simbolo { font-size: 1.5rem; font-weight: 800; color: #8b5cf6; margin-right: 8px; }
+        .card-premium { transition: all 0.4s cubic-bezier(0.4,0,0.2,1); border: 2px solid transparent; }
+        .card-premium:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(139,92,246,0.25); border-color: #8b5cf6; }
+        .section-colorida { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 5px solid #f59e0b; }
+        .section-contratante { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-left: 5px solid #3b82f6; }
+        .section-prestador { background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); border-left: 5px solid #ec4899; }
+        .section-valores { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 5px solid #10b981; }
+        .section-datas { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border-left: 5px solid #6366f1; }
+        .animate-slide-up { animation: slideUp 0.6s ease forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-primary { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%); transition: all 0.3s ease; position: relative; overflow: hidden; font-size: 1rem; font-weight: 700; }
+        .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.5s; }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 20px 40px -10px rgba(139,92,246,0.5); }
+        .btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); transition: all 0.3s ease; font-size: 0.9rem; font-weight: 700; }
+        .btn-secondary { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); transition: all 0.3s ease; font-size: 0.9rem; font-weight: 700; }
+        .checkbox-premium { appearance: none; width: 24px; height: 24px; border: 3px solid #cbd5e1; border-radius: 8px; cursor: pointer; position: relative; transition: all 0.2s; flex-shrink: 0; }
+        .checkbox-premium:checked { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-color: #8b5cf6; }
+        .checkbox-premium:checked::after { content: '✓'; position: absolute; color: white; font-size: 16px; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .label-grande { font-size: 1rem; font-weight: 700; color: #374151; margin-bottom: 0.5rem; display: block; }
+        .result-card { background: white; border-radius: 20px; padding: 20px; border: 2px solid #e5e7eb; transition: all 0.3s ease; font-size: 1rem; }
+        .result-card:hover { border-color: #8b5cf6; box-shadow: 0 15px 35px -10px rgba(139,92,246,0.2); }
+        .badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .modal-overlay { background: rgba(15,23,42,0.85); backdrop-filter: blur(12px); }
+        #pdf-content, #lar-pdf-content { font-family: 'Inter', sans-serif; background: white; margin: 0 auto; font-size: 14px; line-height: 1.5; width: 190mm; max-width: 190mm; }
+        .pdf-page { width: 190mm; max-width: 190mm; min-height: 277mm; padding: 10mm 15mm; box-sizing: border-box; position: relative; overflow-x: hidden; page-break-inside: avoid; }
+        .pdf-page + .pdf-page { page-break-before: always; }
+        .pdf-section-block { page-break-inside: avoid; margin-bottom: 12px; width: 100%; max-width: 100%; }
+        .pdf-header { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; page-break-inside: avoid; width: 100%; }
+        .pdf-title { font-size: 28px; font-weight: 800; margin-bottom: 5px; letter-spacing: -0.5px; }
+        .pdf-subtitle { font-size: 13px; opacity: 0.95; font-weight: 500; }
+        .pdf-section-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #e5e7eb; page-break-after: avoid; }
+        .pdf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; width: 100%; }
+        .pdf-info-box { background: #f9fafb; border-radius: 8px; padding: 12px; border-left: 3px solid #8b5cf6; width: 100%; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; hyphens: auto; }
+        .pdf-info-box.alt { border-left-color: #ec4899; }
+        .pdf-label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .pdf-value { font-size: 13px; font-weight: 700; color: #1f2937; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; }
+        .pdf-value-large { font-size: 16px; color: #7c3aed; }
+        .pdf-verba-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; width: 100%; }
+        .pdf-verba-info { flex: 1; min-width: 0; padding-right: 10px; }
+        .pdf-verba-info h4 { font-size: 14px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+        .pdf-verba-info p { font-size: 12px; color: #6b7280; margin: 0; line-height: 1.4; }
+        .pdf-verba-valor { font-size: 16px; font-weight: 800; color: #059669; white-space: nowrap; flex-shrink: 0; }
+        .pdf-total-box { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 10px; padding: 20px; margin-top: 15px; text-align: center; page-break-inside: avoid; width: 100%; }
+        .pdf-total-label { font-size: 14px; font-weight: 600; opacity: 0.95; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .pdf-total-valor { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+        .pdf-data-pagamento { font-size: 13px; margin-top: 8px; opacity: 0.95; }
+        .pdf-quitacao { margin-top: 15px; padding: 15px; background: #f3f4f6; border-radius: 8px; border-left: 3px solid #8b5cf6; page-break-inside: avoid; width: 100%; }
+        .pdf-quitacao h4 { font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 10px; }
+        .pdf-quitacao p { font-size: 13px; line-height: 1.6; color: #4b5563; margin-bottom: 8px; text-align: justify; }
+        .pdf-assinaturas { margin-top: 25px; display: flex; justify-content: space-between; gap: 20px; page-break-inside: avoid; width: 100%; }
+        .pdf-assinatura { flex: 1; text-align: center; min-width: 0; }
+        .pdf-linha-assinatura { border-top: 2px solid #1f2937; margin-bottom: 8px; padding-top: 8px; }
+        .pdf-assinatura-nome { font-size: 12px; color: #1f2937; margin-bottom: 2px; }
+        .pdf-assinatura-cargo { font-size: 10px; color: #6b7280; font-weight: 600; text-transform: uppercase; }
+        .pdf-footer { position: absolute; bottom: 10mm; left: 15mm; right: 15mm; text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+        .pdf-page-number { position: absolute; bottom: 10mm; right: 15mm; font-size: 10px; color: #9ca3af; }
+        .tipo-calculo-option { opacity: 0.5; pointer-events: none; transition: all 0.3s ease; }
+        .tipo-calculo-option.active { opacity: 1; pointer-events: auto; }
+        
+        /* Toast notification com botão fechar funcional */
+        .toast-notification {
             position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(3px);
-            z-index: 70;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.25s ease, visibility 0.25s ease;
-        }
-
-        .sidebar-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .main-shell {
-            flex: 1;
-            min-width: 0;
-            background: #09090b;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .mobile-topbar {
-            display: none;
-            position: sticky;
-            top: 0;
-            z-index: 65;
-            background: rgba(24, 24, 27, 0.96);
-            border-bottom: 1px solid #27272a;
-            backdrop-filter: blur(10px);
-        }
-
-        .desktop-header {
-            position: sticky;
-            top: 0;
-            z-index: 60;
-            background: rgba(24, 24, 27, 0.92);
-            border-bottom: 1px solid #27272a;
-            backdrop-filter: blur(10px);
-        }
-
-        .content-scroll {
-            flex: 1;
-            overflow: auto;
-            min-height: 0;
-        }
-
-        .content-section {
-            padding: 2rem;
-        }
-
-        .chart-canvas-wrap {
-            position: relative;
-            width: 100%;
-            min-height: 18rem;
-            height: 20rem;
-        }
-
-        .chart-canvas-wrap canvas {
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        .responsive-list-card {
-            overflow: hidden;
-        }
-
-        .export-btn {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            transition: all 0.3s ease;
-        }
-
-        .export-btn:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.4);
-        }
-
-        .export-btn:active {
-            transform: translateY(0);
-        }
-
-        .dialog-panel {
-            box-shadow: 0 30px 80px -30px rgba(0,0,0,0.7);
-        }
-
-        /* ===== ESTILOS DO PDF (copiados do Resumo_Extrato) ===== */
-        .pdf-page {
-            width: 297mm;
-            height: 210mm;
-            background: white;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            box-sizing: border-box;
-            font-family: 'Inter', system-ui, sans-serif;
-            color: #0f172a;
-        }
-
-        .pdf-page + .pdf-page { margin-top: 20px; }
-
-        .pdf-content {
-            flex: 1;
-            padding: 0.6cm 1.2cm;
-            overflow: hidden;
-        }
-
-        .pdf-header {
-            padding: 0.5cm 1.2cm 0.3cm 1.2cm;
-            border-bottom: 3px solid #0ea5e9;
-            background: white;
-        }
-
-        .pdf-footer {
-            padding: 0.2cm 1.2cm;
-            border-top: 1px solid #e2e8f0;
-            text-align: center;
-            font-size: 9pt;
-            color: #64748b;
-            background: white;
-        }
-
-        .pdf-card {
-            background: #f8fafc;
-            border-radius: 1rem;
-            padding: 0.9rem 1rem;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-        }
-
-        .pdf-card-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 0.6rem;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 60px;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
-        }
-
-        .pdf-card-title i { font-size: 1rem; }
-
-        .pdf-metric {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            padding: 0.4rem 0;
-            border-bottom: 1px dashed #cbd5e1;
-            font-size: 0.75rem;
-        }
-
-        .pdf-metric:last-child { border-bottom: none; }
-        .pdf-metric span:first-child { color: #334155; font-weight: 500; }
-        .pdf-metric span:last-child {
-            font-weight: 800;
-            color: #0f172a;
-            font-family: 'Roboto Mono', monospace;
-            text-align: right;
-        }
-
-        .pdf-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.7rem;
-        }
-
-        .pdf-full-width { grid-column: 1 / -1; }
-
-        .insight-card {
-            background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
-            border-left: 4px solid #0ea5e9;
-            border-radius: 0.75rem;
-            padding: 0.6rem 0.9rem;
-            margin-bottom: 0.6rem;
-        }
-
-        .insight-title {
-            font-size: 0.7rem;
-            text-transform: uppercase;
+            gap: 12px;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.3);
+            z-index: 1000;
             font-weight: 600;
-            color: #1e293b;
-            letter-spacing: 0.03em;
-        }
-
-        .insight-value {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #0f172a;
-            line-height: 1.2;
-            font-family: 'Roboto Mono', monospace;
-        }
-
-        .bar-chart-row {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            margin-bottom: 0.8rem;
-        }
-        .bar-label {
-            width: 30%;
-            font-size: 0.7rem;
-            font-weight: 600;
+            font-size: 0.95rem;
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            backdrop-filter: blur(8px);
+            background: rgba(15,23,42,0.95);
+            border-left: 5px solid #10b981;
+            max-width: 90vw;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            cursor: default;
         }
-        .bar-bg {
-            flex: 1;
-            height: 22px;
-            background-color: #e2e8f0;
-            border-radius: 12px;
-            overflow: hidden;
+        @media (max-width: 640px) {
+            .toast-notification { white-space: normal; text-align: center; border-radius: 20px; padding: 10px 16px; font-size: 0.85rem; gap: 8px; max-width: 85vw; flex-wrap: wrap; justify-content: center; }
+            .toast-notification span:first-child { font-size: 1.2rem; }
+            .toast-close { margin-left: 5px; padding: 4px 8px; min-width: 32px; }
         }
-        .bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #0ea5e9, #10b981);
-            border-radius: 12px;
-            width: 0%;
-        }
-        .bar-value {
-            min-width: 45px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            font-family: monospace;
-            text-align: right;
-        }
-
-        .a4-preview {
-            background: #e5e7eb;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
+        .toast-notification.show { transform: translateX(-50%) translateY(0); }
+        .toast-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 30px;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
             align-items: center;
-            gap: 24px;
+            justify-content: center;
+            transition: background 0.2s;
+            margin-left: 6px;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
         }
-
-        .a4-preview .pdf-page {
-            box-shadow: 0 10px 40px -8px rgba(0, 0, 0, 0.4);
-            transform-origin: top center;
+        .toast-close:active { background: rgba(255,255,255,0.4); transform: scale(0.95); }
+        
+        /* Botões responsivos: sempre mostrar texto */
+        .btn-mobile-text {
+            white-space: nowrap;
         }
-
-        @media (max-width: 1279px) {
-            .pdf-page {
-                width: min(100%, 1120px);
-                height: auto;
-                aspect-ratio: 297 / 210;
-            }
+        @media (max-width: 480px) {
+            .btn-mobile-text { font-size: 0.75rem; padding-left: 8px; padding-right: 8px; }
+            .btn-mobile-text span { font-size: 1rem; }
         }
-
-        @media (max-width: 1023px) {
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                bottom: 0;
-                transform: translateX(-100%);
-                transition: transform 0.28s ease;
-                width: min(86vw, 20rem);
-                max-width: 20rem;
-                box-shadow: 0 0 0 rgba(0,0,0,0);
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-                box-shadow: 0 25px 60px rgba(0,0,0,0.55);
-            }
-
-            .mobile-topbar {
-                display: block;
-            }
-
-            .desktop-header {
-                top: 4.5rem;
-            }
-
-            .content-section {
-                padding: 1.25rem;
-            }
-
-            .chart-canvas-wrap {
-                min-height: 16rem;
-                height: 18rem;
-            }
-        }
-
-        @media (max-width: 767px) {
-            :root {
-                --header-height: 4.25rem;
-            }
-
-            .card:hover {
-                transform: translateY(-2px);
-            }
-
-            .content-section {
-                padding: 1rem;
-            }
-
-            .chart-canvas-wrap {
-                min-height: 14rem;
-                height: 15rem;
-            }
-
-            .a4-preview {
-                padding: 12px;
-                gap: 14px;
-            }
-
-            .a4-preview .pdf-page {
-                width: 100%;
-                aspect-ratio: auto;
-                height: auto;
-            }
-        }
-
-        @media print {
-            @page {
-                size: A4 landscape;
-                margin: 0;
-            }
-
-            body > *:not(#pdfPrintRoot) { display: none !important; }
-
-            #pdfPrintRoot {
-                display: block !important;
-                position: static !important;
-                width: 100% !important;
-                background: white !important;
-            }
-
-            .pdf-page {
-                width: 297mm !important;
-                height: 210mm !important;
-                page-break-after: always;
-                page-break-inside: avoid;
-                break-after: page;
-                break-inside: avoid;
-                margin: 0 !important;
-                box-shadow: none !important;
-            }
-
-            .pdf-page:last-child {
-                page-break-after: avoid;
-                break-after: avoid;
-            }
+        
+        /* Responsividade extra */
+        @media (max-width: 768px) {
+            .glass { padding: 1.25rem; }
+            .section-contratante, .section-prestador, .section-valores, .section-datas, .section-colorida { padding: 1rem; }
+            .result-card { padding: 1rem; }
+            .label-grande { font-size: 0.9rem; }
+            .btn-primary, .btn-success, .btn-secondary { padding-top: 0.75rem; padding-bottom: 0.75rem; }
         }
     </style>
 </head>
-<body>
-    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
-
-    <div class="app-shell" id="appRoot">
-        <aside id="appSidebar" class="sidebar">
-            <div class="p-5 sm:p-6 border-b border-zinc-800">
-                <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 sm:w-11 sm:h-11 bg-sky-600 rounded-2xl flex items-center justify-center text-white text-2xl sm:text-3xl flex-shrink-0">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h1 class="text-lg sm:text-xl xl:text-2xl font-bold tracking-tight leading-tight">OPERAÇÃO BARRICADA ZERO</h1>
-                        <p class="text-[11px] sm:text-xs text-zinc-500 mt-1">PMERJ/PCERJ • 2025/2026</p>
-                    </div>
-                    <button class="lg:hidden ml-auto text-zinc-400 hover:text-white text-2xl leading-none" onclick="closeSidebar()" aria-label="Fechar menu">
-                        ×
+<body class="gradient-bg min-h-screen text-slate-800">
+    <nav class="glass sticky top-0 z-50 border-b border-white/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-14 sm:h-14 gradient-primary rounded-xl sm:rounded-2xl flex items-center justify-center text-white text-2xl sm:text-3xl shadow-xl">📋</div>
+                    <div><h1 class="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">RCT-PJ</h1><p class="text-xs sm:text-sm text-slate-600 font-semibold tracking-wider uppercase">Rescisão Contratual • Prestador PJ</p></div>
+                </div>
+                <div class="flex gap-2 sm:gap-3">
+                    <button onclick="openLARModal()" class="btn-mobile-text flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-xl font-bold transition-all text-sm shadow-lg border border-pink-600">
+                        <span class="text-lg sm:text-xl">🏖️</span>
+                        <span>Licença Anual</span>
+                    </button>
+                    <button onclick="resetForm()" class="btn-mobile-text flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold transition-all text-sm shadow-lg border border-slate-200">
+                        <span class="text-lg sm:text-xl">⟳</span>
+                        <span>Nova Rescisão</span>
                     </button>
                 </div>
             </div>
+        </div>
+    </nav>
 
-            <nav class="flex-1 px-3 py-5 sm:py-6 space-y-1 overflow-auto">
-                <a onclick="switchSection('dashboard')" class="sidebar-link flex items-center gap-3 px-4 sm:px-5 py-3.5 rounded-2xl text-sm font-medium cursor-pointer bg-zinc-800" id="nav-dashboard">
-                    <i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard
-                </a>
-                <a onclick="switchSection('recolocacoes')" class="sidebar-link flex items-center gap-3 px-4 sm:px-5 py-3.5 rounded-2xl text-sm font-medium cursor-pointer hover:bg-zinc-800" id="nav-recolocacoes">
-                    <i class="fa-solid fa-rotate w-5 text-center"></i> Recolocações
-                </a>
-                <a onclick="switchSection('criminais')" class="sidebar-link flex items-center gap-3 px-4 sm:px-5 py-3.5 rounded-2xl text-sm font-medium cursor-pointer hover:bg-zinc-800" id="nav-criminais">
-                    <i class="fa-solid fa-handcuffs w-5 text-center"></i> Criminais
-                </a>
-            </nav>
-
-            <div class="p-4 sm:p-6 border-t border-zinc-800 space-y-4">
-                <label for="fileInput"
-                       class="w-full bg-zinc-800 hover:bg-zinc-700 border border-dashed border-zinc-700 rounded-3xl py-5 sm:py-6 px-4 text-center transition-all cursor-pointer block">
-                    <i class="fa-solid fa-file-excel text-4xl sm:text-5xl text-emerald-400 mb-2"></i>
-                    <p class="font-medium text-sm sm:text-base">Importar Planilha</p>
-                    <p class="text-[11px] sm:text-xs text-zinc-500 break-all">Op-BZero-Modelo.xlsx</p>
-                </label>
-                <input type="file" id="fileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onchange="handleFileUpload(event)" style="opacity:0;position:absolute;width:1px;height:1px;overflow:hidden;pointer-events:none;">
-
-                <button onclick="generateAndShowPDF()"
-                        class="w-full bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base">
-                    <i class="fa-solid fa-file-pdf"></i> RELATÓRIO A4
-                </button>
-            </div>
-        </aside>
-
-        <div class="main-shell">
-            <div class="mobile-topbar lg:hidden">
-                <div class="px-4 py-3 flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <button onclick="toggleSidebar()" class="w-11 h-11 rounded-2xl bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center" aria-label="Abrir menu">
-                            <i class="fa-solid fa-bars"></i>
-                        </button>
-                        <div class="min-w-0">
-                            <div class="text-sm font-semibold truncate">Operação Barricada Zero</div>
-                            <div class="text-[11px] text-zinc-500 truncate" id="mobileFileName">Nenhuma planilha carregada</div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <div class="text-center mb-8 sm:mb-12 animate-slide-up"><h2 class="text-3xl sm:text-5xl font-bold text-white mb-3 sm:mb-4 tracking-tight drop-shadow-lg">Cálculo de Rescisão Contratual</h2><p class="text-white/90 text-base sm:text-xl font-medium">Gratificação Especial • Compensação por Serviços Adicionais • Resíduo Contratual</p></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+            <div class="lg:col-span-7">
+                <div class="glass rounded-3xl shadow-2xl p-5 sm:p-8 card-premium">
+                    <div class="mb-6 sm:mb-8 text-center"><h3 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center justify-center gap-2 sm:gap-3"><span class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-xl sm:text-2xl">📝</span>Informações da Rescisão</h3><p class="text-slate-600 text-base sm:text-lg mt-2 font-medium">Preencha os dados abaixo para calcular as verbas rescisórias</p></div>
+                    <form id="rescisaoForm" onsubmit="event.preventDefault(); calcularRescisao();">
+                        <div class="space-y-5 sm:space-y-6">
+                            <div class="section-contratante rounded-2xl p-4 sm:p-6"><h4 class="text-lg sm:text-xl font-bold text-blue-800 mb-3 sm:mb-4 flex items-center gap-2"><span>🏢</span> Dados do Contratante</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5"><div><label class="label-grande text-blue-900">Razão Social</label><input type="text" id="contratante" value="Labmedic Comércio e Manutenção de Equipamentos Médicos LTDA" class="input-premium w-full rounded-xl px-4 py-3 sm:py-4 bg-white/80" required></div><div><label class="label-grande text-blue-900">CNPJ</label><input type="text" id="cnpj_contratante" value="21.947.632/0001-37" class="input-premium w-full rounded-xl px-4 py-3 sm:py-4 bg-white/80" required></div></div></div>
+                            <div class="section-prestador rounded-2xl p-4 sm:p-6"><h4 class="text-lg sm:text-xl font-bold text-pink-800 mb-3 sm:mb-4 flex items-center gap-2"><span>👤</span> Dados do Prestador</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5"><div><label class="label-grande text-pink-900">Nome / Razão Social</label><input type="text" id="prestador" value="Nome do Prestador de Serviços - MEI" class="input-premium w-full rounded-xl px-4 py-3 sm:py-4 bg-white/80" required onfocus="limparCampoPadrao(this, 'Nome do Prestador de Serviços - MEI')"></div><div><label class="label-grande text-pink-900">CNPJ / CPF</label><input type="text" id="cnpj_prestador" value="Informe aqui o CNPJ" class="input-premium w-full rounded-xl px-4 py-3 sm:py-4 bg-white/80" required onfocus="limparCampoPadrao(this, 'Informe aqui o CNPJ')"></div></div></div>
+                            <div class="section-valores rounded-2xl p-4 sm:p-6"><h4 class="text-lg sm:text-xl font-bold text-emerald-800 mb-3 sm:mb-4 flex items-center gap-2"><span>💰</span> Valores e Serviço</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5"><div><label class="label-grande text-emerald-900">Remuneração Mensal (R$)</label><div class="relative flex items-center bg-white/80 rounded-xl px-3 py-2 input-premium"><span class="moeda-simbolo">R$</span><input type="text" id="remuneracao_display" value="3.500,00" class="input-moeda w-full bg-transparent border-none outline-none" oninput="formatarMoedaInput(this)" required><input type="hidden" id="remuneracao" value="3500"></div><p class="text-xs sm:text-sm text-emerald-700 mt-2 font-medium">💡 Mês comercial: 30 dias</p></div><div><label class="label-grande text-emerald-900">Natureza do Serviço</label><input type="text" id="natureza" value="Manutenção de Equipamentos Médico-hospitalares" class="input-premium w-full rounded-xl px-4 py-3 sm:py-4 bg-white/80" required></div></div></div>
+                            <div class="section-datas rounded-2xl p-4 sm:p-6"><h4 class="text-lg sm:text-xl font-bold text-indigo-800 mb-3 sm:mb-4 flex items-center gap-2"><span>📅</span> Período e Pagamento</h4><div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4"><div><label class="label-grande text-indigo-900">Data de Início</label><input type="date" id="data_inicio" value="2025-01-15" class="input-premium w-full rounded-xl px-4 py-3 sm:py-4 bg-white/80" required onchange="verificarDuracaoContrato()"></div><div><label class="label-grande text-indigo-900">Data de Término</label><input type="date" id="data_termino" value="2026-03-30" class="input-premium w-full rounded-xl px-4 py-3 sm:py-4 bg-white/80" required onchange="verificarDuracaoContrato()"></div><div><label class="label-grande text-indigo-900">Data de Pagamento</label><input type="date" id="data_pagamento" value="2026-03-30" class="input-premium w-full rounded-xl px-4 py-3 sm:py-4 bg-white/80" required></div></div></div>
+                            <div class="section-colorida rounded-2xl p-4 sm:p-6"><h4 class="text-lg sm:text-xl font-bold text-amber-800 mb-3 sm:mb-4 flex items-center gap-2"><span>⚙️</span> Opções de Cálculo</h4><div class="space-y-4"><label class="flex items-start gap-3 cursor-pointer group"><input type="checkbox" id="remuneracao_anterior_paga" class="checkbox-premium mt-1"><div><span class="font-bold text-amber-900 block text-base sm:text-lg mb-1">Remuneração da competência anterior já foi paga integralmente</span><p class="text-sm text-amber-800">O Resíduo Contratual considerará apenas os dias excedentes ao mês anterior.</p></div></label><label class="flex items-start gap-3 cursor-pointer group pt-4 border-t border-amber-300"><input type="checkbox" id="aviso_previo_concedido" checked class="checkbox-premium mt-1"><div><span class="font-bold text-amber-900 block text-base sm:text-lg mb-1">O prestador concedeu aviso prévio de 30 dias</span><div id="multa_info" class="hidden mt-2"><span class="badge badge-danger text-sm"><span class="mr-2">⚠️</span> Multa contratual de uma remuneração mensal integral será aplicada</span></div></div></label><div id="compensatoria_container" class="hidden pt-4 border-t border-amber-300"><label class="flex items-start gap-3 cursor-pointer group"><input type="checkbox" id="compensatoria_anual_paga" checked class="checkbox-premium mt-1"><div><span class="font-bold text-amber-900 block text-base sm:text-lg mb-1">Houve pagamento da Verba Compensatória Anual?</span><p class="text-sm text-amber-800">Se marcado como "Não", será adicionada uma remuneração mensal + 1/3 às verbas rescisórias.</p></div></label></div></div></div>
+                            <div class="pt-2"><button type="submit" class="btn-primary w-full py-4 sm:py-5 text-white rounded-2xl shadow-2xl">🚀 PROCESSAR CÁLCULO</button></div>
                         </div>
-                    </div>
-                    <button onclick="generateAndShowPDF()" class="flex-shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-r from-sky-600 to-emerald-600 text-white flex items-center justify-center" aria-label="Gerar relatório A4">
-                        <i class="fa-solid fa-file-pdf"></i>
-                    </button>
+                    </form>
                 </div>
             </div>
-
-            <main class="content-scroll bg-zinc-950">
-                <header class="desktop-header px-4 sm:px-6 lg:px-8 py-4 lg:py-5">
-                    <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 xl:gap-6">
-                        <div class="min-w-0">
-                            <h1 class="text-lg sm:text-xl lg:text-2xl font-bold leading-tight">Dashboard Sintético Sobre as Ações da Operação</h1>
-                        </div>
-                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 font-mono text-emerald-400 text-xs sm:text-sm min-w-0">
-                            <span id="fileName" class="truncate">Nenhuma planilha carregada</span>
-                            <span id="linesProcessed" class="text-[11px] sm:text-xs bg-zinc-800 px-3 py-1.5 rounded-full w-fit"></span>
-                        </div>
-                    </div>
-                </header>
-
-                <section id="dashboardContent" class="content-section">
-                    <div id="emptyState" class="empty-state rounded-3xl px-6 py-14 sm:p-16 lg:p-20 text-center">
-                        <i class="fa-solid fa-file-excel text-6xl sm:text-7xl text-zinc-700 mb-6"></i>
-                        <h3 class="text-xl sm:text-2xl font-medium text-zinc-400">Dashboard vazio</h3>
-                        <p class="text-sm sm:text-base text-zinc-500 mt-3 mb-8">Importe a planilha <strong>Op-BZero-Modelo.xlsx</strong></p>
-                        <label for="fileInput" class="inline-flex items-center gap-3 cursor-pointer bg-zinc-800 hover:bg-zinc-700 border border-dashed border-zinc-600 hover:border-emerald-500 transition-all rounded-2xl px-8 py-5">
-                            <i class="fa-solid fa-file-excel text-2xl text-emerald-400"></i>
-                            <span class="font-semibold text-base text-zinc-200">Importar Planilha</span>
-                        </label>
-                    </div>
-
-                    <div id="realContent" class="hidden">
-                        <h2 class="section-header text-xl sm:text-2xl font-semibold mb-8 relative">Dados Preliminares</h2>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-6 mb-10 sm:mb-12" id="preliminaresGrid"></div>
-
-                        <h2 class="section-header text-xl sm:text-2xl font-semibold mb-8 flex items-center gap-3 relative">
-                            <i class="fa-solid fa-trash-can text-rose-500"></i> Remoções
-                        </h2>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mb-10 sm:mb-12" id="remocoesGrid"></div>
-
-                        <div class="bg-zinc-900 rounded-3xl p-4 sm:p-6 lg:p-8 border border-zinc-800">
-                            <h3 class="font-semibold text-base sm:text-lg mb-6 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-bar"></i> Top 5 Municípios por Toneladas
-                            </h3>
-                            <div class="grid grid-cols-1 xl:grid-cols-5 gap-6 lg:gap-8 items-start">
-                                <div class="xl:col-span-3">
-                                    <div class="chart-canvas-wrap">
-                                        <canvas id="municipiosChart"></canvas>
-                                    </div>
-                                </div>
-                                <div class="xl:col-span-2 responsive-list-card" id="municipiosList"></div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="recolocacoesContent" class="content-section hidden">
-                    <h2 class="section-header text-xl sm:text-2xl font-semibold mb-8 relative">Recolocações</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4 sm:gap-6" id="recolocacoesGrid"></div>
-                </section>
-
-                <section id="criminaisContent" class="content-section hidden">
-                    <h2 class="section-header text-xl sm:text-2xl font-semibold mb-8 relative">Registros Criminais</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6" id="criminaisGrid"></div>
-                </section>
-            </main>
+            <div id="dashboard" class="lg:col-span-5 hidden"><div class="sticky top-24 sm:top-28"><div class="flex items-center justify-between mb-4 sm:mb-6"><h3 class="text-2xl sm:text-3xl font-bold text-white drop-shadow-md">Resumo das Verbas</h3><button onclick="calcularRescisao()" class="text-white/90 hover:text-white flex items-center gap-2 text-sm sm:text-base font-bold transition-colors bg-white/20 px-3 py-2 rounded-xl backdrop-blur"><span class="text-xl">↻</span> Recalcular</button></div><div id="verbas-container" class="space-y-3 sm:space-y-4"></div><div class="mt-5 sm:mt-6 gradient-success rounded-3xl p-5 sm:p-8 text-white shadow-2xl border-4 border-white/30"><div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-sm sm:text-base font-bold opacity-95 uppercase tracking-wider">Valor Total a Receber</p><p id="data_pagamento_display" class="text-xs sm:text-base mt-2 opacity-95 font-medium"></p></div><div id="total-geral" class="text-3xl sm:text-5xl font-bold tabular-nums drop-shadow-lg"></div></div></div><div class="mt-5 sm:mt-6"><button onclick="previewPDF()" class="w-full py-4 sm:py-5 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-2xl flex items-center justify-center gap-2 sm:gap-3 shadow-2xl transition-all border-2 border-slate-200 text-base sm:text-lg"><span class="text-2xl sm:text-3xl">👁️</span><span>Visualizar PDF Completo</span></button></div><p class="text-center text-white/80 text-xs sm:text-sm mt-5 sm:mt-6 font-medium">📅 Cálculo com base em mês comercial de 30 dias • Fuso horário Brasília (UTC-3)</p></div></div>
         </div>
     </div>
 
-    <div id="criminaisModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur z-[100] flex items-center justify-center p-3 sm:p-4 lg:p-6">
-        <div class="dialog-panel bg-zinc-900 rounded-3xl w-full max-w-5xl max-h-[94vh] overflow-hidden flex flex-col border border-zinc-800">
-            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-zinc-800 flex items-start sm:items-center justify-between gap-4 flex-shrink-0">
-                <div class="min-w-0">
-                    <h3 class="text-lg sm:text-xl font-semibold break-words" id="criminaisModalTitle">Registros Criminais</h3>
-                    <p class="text-xs text-zinc-500 mt-0.5" id="criminaisModalSubtitle">Aba REGISTROS</p>
-                </div>
-                <button onclick="closeCriminaisModal()" class="text-3xl sm:text-4xl text-zinc-400 leading-none hover:text-white flex-shrink-0" aria-label="Fechar modal">×</button>
+    <!-- Toast de sucesso com botão fechar corrigido -->
+    <div id="successToast" class="toast-notification">
+        <span>✅</span> 
+        <span id="toastMessage">Cálculo realizado com sucesso!</span> 
+        <span>👇</span>
+        <button class="toast-close" onclick="event.stopPropagation(); fecharToast();">✕</button>
+    </div>
+
+    <!-- Modais (LAR, PDF) mantidos com ajustes responsivos -->
+    <div id="larModal" class="hidden fixed inset-0 modal-lar-overlay z-[100] flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[95vh] overflow-hidden flex flex-col shadow-2xl mx-2 sm:mx-0">
+            <div class="flex justify-between items-center border-b border-slate-200 px-5 sm:px-8 py-4 sm:py-6 bg-gradient-to-r from-pink-50 to-rose-50"><div><h3 class="text-xl sm:text-2xl font-bold text-slate-900">🏖️ Licença Anual Remunerada</h3><p class="text-sm sm:text-base text-slate-600 mt-1">Cálculo para prestadores de serviço técnico PJ (MEI)</p></div><button onclick="closeLARModal()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition-colors text-base">✕</button></div>
+            <div class="flex-1 overflow-auto p-5 sm:p-8">
+                <form id="larForm" onsubmit="event.preventDefault(); calcularLAR();" class="space-y-5 sm:space-y-6">
+                    <div><label class="label-grande text-pink-900">Remuneração Mensal Contratual (R$)</label><div class="relative flex items-center bg-white rounded-xl px-3 py-2 border-2 border-pink-200 focus-within:border-pink-500"><span class="moeda-simbolo">R$</span><input type="text" id="lar_remuneracao_display" value="3.500,00" class="input-moeda w-full bg-transparent border-none outline-none" oninput="formatarMoedaInput(this, 'lar_remuneracao')" required><input type="hidden" id="lar_remuneracao" value="3500"></div><p class="text-xs sm:text-sm text-pink-700 mt-2 font-medium">💡 Base para cálculo: 30 dias comerciais</p></div>
+                    <div><label class="label-grande text-pink-900">Data Inicial do Afastamento</label><input type="date" id="lar_data_inicio" value="2026-04-01" class="input-premium w-full rounded-xl px-4 py-3 bg-white border-2 border-pink-200 focus:border-pink-500" required onchange="calcularDataFim()"><p class="text-xs sm:text-sm text-pink-700 mt-2 font-medium">📅 Primeiro dia de afastamento</p></div>
+                    <div><label class="label-grande text-pink-900">Dias de Afastamento</label><input type="number" id="lar_dias_afastamento" value="15" min="1" max="365" class="input-premium w-full rounded-xl px-4 py-3 bg-white border-2 border-pink-200 focus:border-pink-500" required onchange="calcularDataFim(); atualizarTipoCalculo()"><p class="text-xs sm:text-sm text-pink-700 mt-2 font-medium">📊 Número de dias do afastamento</p></div>
+                    <div><label class="label-grande text-pink-900">Data Final do Afastamento (Calculada)</label><input type="date" id="lar_data_fim" value="2026-04-15" class="input-premium w-full rounded-xl px-4 py-3 bg-slate-100 border-2 border-pink-200" disabled><p class="text-xs sm:text-sm text-pink-700 mt-2 font-medium">📅 Calculada automaticamente</p></div>
+                    <div><label class="label-grande text-pink-900">Tipo de Cálculo</label><div class="space-y-3"><label class="flex items-center gap-3 cursor-pointer p-3 border-2 border-pink-200 rounded-xl hover:bg-pink-50 transition-colors tipo-calculo-option active" id="opcao-proporcional"><input type="radio" name="lar_tipo" value="proporcional" checked class="w-5 h-5 accent-pink-500"><div><span class="font-bold text-pink-900 block">Proporcional</span><p class="text-xs sm:text-sm text-pink-700">Calcula apenas os dias do afastamento</p></div></label><label class="flex items-center gap-3 cursor-pointer p-3 border-2 border-pink-200 rounded-xl hover:bg-pink-50 transition-colors tipo-calculo-option" id="opcao-integral"><input type="radio" name="lar_tipo" value="integral" class="w-5 h-5 accent-pink-500"><div><span class="font-bold text-pink-900 block">Integral (30 dias)</span><p class="text-xs sm:text-sm text-pink-700">Paga uma remuneração mensal completa + 1/3</p></div></label></div></div>
+                    <div class="flex gap-3 pt-4"><button type="submit" class="btn-secondary flex-1 py-3 text-white rounded-2xl shadow-lg">🧮 Calcular Licença</button><button type="button" onclick="closeLARModal()" class="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-2xl font-bold transition-colors">Cancelar</button></div>
+                </form>
+                <div id="larResultado" class="hidden mt-6 sm:mt-8 pt-6 sm:pt-8 border-t-2 border-slate-200"><h4 class="text-lg sm:text-xl font-bold text-slate-900 mb-5 sm:mb-6">📊 Resultado do Cálculo</h4><div id="larResultadoContainer" class="space-y-3 sm:space-y-4"></div><button onclick="previewLARPDF()" class="btn-success w-full py-3 sm:py-4 text-white rounded-2xl shadow-lg mt-5 sm:mt-6">👁️ Visualizar Recibo em PDF</button></div>
             </div>
-            <div class="p-4 sm:p-6 overflow-auto flex-1" id="registrosList"></div>
         </div>
     </div>
 
-    <div id="pdfModal" class="hidden fixed inset-0 bg-black/90 z-[999] flex items-center justify-center p-3 sm:p-4">
-        <div class="dialog-panel bg-zinc-950 rounded-3xl w-full max-w-[1250px] max-h-[95vh] overflow-hidden flex flex-col border border-zinc-800">
-            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-zinc-800 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 bg-zinc-900 flex-shrink-0">
-                <div class="flex items-center gap-3 text-lg sm:text-xl font-bold text-white min-w-0">
-                    <i class="fa-solid fa-file-pdf text-red-500"></i>
-                    <span>RELATÓRIO A4</span>
-                </div>
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 lg:gap-3">
-                    <span class="text-[11px] sm:text-xs text-zinc-500">
-                        <i class="fa-solid fa-info-circle mr-1"></i>
-                        Selecione "Salvar como PDF" na caixa de impressão
-                    </span>
-                    <div class="flex items-center gap-2 sm:gap-3">
-                        <button id="exportPdfBtn" onclick="exportToPDF()"
-                                class="export-btn text-white px-4 sm:px-6 py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 text-xs sm:text-sm flex-1 sm:flex-none">
-                            <i class="fa-solid fa-print"></i> EXPORTAR PDF
-                        </button>
-                        <button onclick="closePdfModal()" class="text-3xl text-white hover:text-zinc-400 leading-none px-1" aria-label="Fechar visualização do relatório">×</button>
-                    </div>
-                </div>
-            </div>
+    <div id="pdfModal" class="hidden fixed inset-0 modal-overlay z-[100] flex items-center justify-center p-3 sm:p-4"><div class="bg-white rounded-3xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col shadow-2xl mx-2 sm:mx-0"><div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-200 px-5 sm:px-8 py-4 sm:py-6 bg-gradient-to-r from-slate-50 to-white"><div><h3 class="text-xl sm:text-2xl font-bold text-slate-900">📄 Pré-visualização do Relatório</h3><p class="text-sm sm:text-base text-slate-600 mt-1">Revise o documento antes de exportar</p></div><div class="flex gap-3"><button onclick="downloadPDF()" class="btn-success px-5 sm:px-8 py-3 sm:py-4 text-white rounded-2xl font-bold flex items-center gap-2 shadow-xl text-sm sm:text-base"><span class="text-xl">⬇️</span> Exportar PDF</button><button onclick="closeModal()" class="px-5 sm:px-8 py-3 sm:py-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-2xl font-bold transition-colors text-sm sm:text-base">✕ Fechar</button></div></div><div class="flex-1 overflow-auto bg-slate-100 p-4 sm:p-8" id="pdfPreviewContainer"></div></div></div>
+    <div id="larPdfModal" class="hidden fixed inset-0 modal-overlay z-[100] flex items-center justify-center p-3 sm:p-4"><div class="bg-white rounded-3xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col shadow-2xl mx-2 sm:mx-0"><div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-200 px-5 sm:px-8 py-4 sm:py-6 bg-gradient-to-r from-pink-50 to-rose-50"><div><h3 class="text-xl sm:text-2xl font-bold text-slate-900">🏖️ Pré-visualização do Recibo</h3><p class="text-sm sm:text-base text-slate-600 mt-1">Licença Anual Remunerada</p></div><div class="flex gap-3"><button onclick="downloadLARPDF()" class="btn-success px-5 sm:px-8 py-3 sm:py-4 text-white rounded-2xl font-bold flex items-center gap-2 shadow-xl text-sm sm:text-base"><span class="text-xl">⬇️</span> Exportar PDF</button><button onclick="closeLARPdfModal()" class="px-5 sm:px-8 py-3 sm:py-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-2xl font-bold transition-colors text-sm sm:text-base">✕ Fechar</button></div></div><div class="flex-1 overflow-auto bg-slate-100 p-4 sm:p-8" id="larPdfPreviewContainer"></div></div></div>
 
-            <div class="flex-1 overflow-auto" id="pdfPreviewContainer"></div>
-        </div>
-    </div>
-
-    <div id="pdfPrintRoot" style="display:none;"></div>
-
-    <div id="progressOverlay" class="hidden fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6" style="background:rgba(9,9,11,0.88);backdrop-filter:blur(6px);">
-        <i class="fa-solid fa-file-excel text-5xl text-emerald-400 animate-pulse"></i>
-        <div class="text-center">
-            <p class="font-semibold text-lg text-zinc-200 mb-1" id="progressLabel">Lendo arquivo…</p>
-            <p class="text-xs text-zinc-500" id="progressSub">Aguarde</p>
-        </div>
-        <div class="w-72 sm:w-96 bg-zinc-800 rounded-full h-3 overflow-hidden">
-            <div id="progressBar" class="h-full rounded-full transition-all duration-300" style="width:0%;background:linear-gradient(90deg,#10b981,#0ea5e9);"></div>
-        </div>
-        <p class="text-xs text-zinc-600" id="progressPct">0%</p>
-    </div>
+    <!-- Templates PDF ocultos (mesmo conteúdo) -->
+    <div id="pdf-template" style="display:none;"><div id="pdf-content"><div class="pdf-page"><div class="pdf-header"><div class="pdf-title">📋 RCT-PJ</div><div class="pdf-subtitle">Relatório Completo de Rescisão Contratual - Prestador PJ</div></div><div class="pdf-section-block"><div class="pdf-section-title">🏢 Dados das Partes</div><div class="pdf-info-grid"><div class="pdf-info-box"><div class="pdf-label">Contratante</div><div class="pdf-value" id="pdf-contratante"></div></div><div class="pdf-info-box alt"><div class="pdf-label">Prestador</div><div class="pdf-value" id="pdf-prestador"></div></div></div><div class="pdf-info-grid"><div class="pdf-info-box"><div class="pdf-label">CNPJ Contratante</div><div class="pdf-value" id="pdf-cnpj-contratante"></div></div><div class="pdf-info-box alt"><div class="pdf-label">CNPJ/CPF Prestador</div><div class="pdf-value" id="pdf-cnpj-prestador"></div></div></div><div class="pdf-info-grid"><div class="pdf-info-box"><div class="pdf-label">Período da Relação Contratual</div><div class="pdf-value" id="pdf-periodo"></div></div><div class="pdf-info-box alt"><div class="pdf-label">Data de Pagamento</div><div class="pdf-value" id="pdf-data-pagamento"></div></div></div><div class="pdf-info-box"><div class="pdf-label">Natureza do Serviço</div><div class="pdf-value" id="pdf-natureza"></div></div><div class="pdf-info-box" style="border-left-color:#10b981;"><div class="pdf-label">Remuneração Contratual Mensal</div><div class="pdf-value pdf-value-large" id="pdf-remuneracao"></div></div></div><div class="pdf-footer"><p>Documento gerado pela RCT-PJ • Cálculo baseado em mês comercial de 30 dias</p></div><div class="pdf-page-number">Página 1</div></div><div class="pdf-page"><div class="pdf-section-block"><div class="pdf-section-title">💰 Verbas Rescisórias</div><div id="pdf-verbas-container"></div></div><div class="pdf-total-box"><div class="pdf-total-label">💵 Total a Receber</div><div class="pdf-total-valor" id="pdf-total"></div><div class="pdf-data-pagamento">Pagamento previsto para: <span id="pdf-data-pagamento-total"></span></div></div><div class="pdf-footer"><p>Documento gerado pela RCT-PJ • Cálculo baseado em mês comercial de 30 dias</p></div><div class="pdf-page-number">Página 2</div></div><div class="pdf-page"><div class="pdf-quitacao"><h4>📝 Termo de Quitação Geral</h4><p>O Prestador declara que concorda integralmente com os valores das verbas rescisórias constantes neste documento e que recebeu o pagamento total de todas as quantias devidas em razão do encerramento da relação contratual de prestação de serviços.</p><p>Desta forma, o Prestador dá plena, geral, irrevogável e irretratável quitação ao Contratante, nada mais tendo a reclamar, seja na Justiça do Trabalho, Justiça Comum ou fora dela, a qualquer título, em razão do contrato ora rescindido.</p><p style="margin-top:12px;font-weight:600;">Este documento foi emitido em duas vias de igual teor e forma e deve ser assinado por ambas as partes.</p></div><div class="pdf-assinaturas"><div class="pdf-assinatura"><div class="pdf-linha-assinatura"></div><div class="pdf-assinatura-nome" id="pdf-assinatura-contratante"></div><div class="pdf-assinatura-cargo">CONTRATANTE</div></div><div class="pdf-assinatura"><div class="pdf-linha-assinatura"></div><div class="pdf-assinatura-nome" id="pdf-assinatura-prestador"></div><div class="pdf-assinatura-cargo">PRESTADOR (PJ)</div></div></div><div class="pdf-footer"><p>Documento gerado automaticamente pela RCT-PJ em <span id="pdf-data-geracao"></span></p><p>Cálculo com base em mês comercial de 30 dias • Fuso horário Brasília (UTC-3)</p></div><div class="pdf-page-number">Página 3</div></div></div></div>
+    <div id="lar-pdf-template" style="display:none;"><div id="lar-pdf-content"><div class="pdf-page"><div class="pdf-header" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);"><div class="pdf-title">🏖️ LICENÇA ANUAL REMUNERADA</div><div class="pdf-subtitle">Recibo de Cálculo - Prestador PJ (MEI)</div></div><div class="pdf-section-block"><div class="pdf-section-title">🏢 Dados do Contratante (Fonte Pagadora)</div><div class="pdf-info-grid"><div class="pdf-info-box"><div class="pdf-label">Contratante</div><div class="pdf-value" id="lar-pdf-contratante"></div></div><div class="pdf-info-box alt"><div class="pdf-label">CNPJ</div><div class="pdf-value" id="lar-pdf-cnpj-contratante"></div></div></div></div><div class="pdf-section-block"><div class="pdf-section-title">📋 Dados do Prestador</div><div class="pdf-info-grid"><div class="pdf-info-box"><div class="pdf-label">Prestador</div><div class="pdf-value" id="lar-pdf-prestador"></div></div><div class="pdf-info-box alt"><div class="pdf-label">CNPJ/CPF</div><div class="pdf-value" id="lar-pdf-cnpj"></div></div></div><div class="pdf-info-box" style="border-left-color:#ec4899;"><div class="pdf-label">Remuneração Mensal Contratual</div><div class="pdf-value pdf-value-large" id="lar-pdf-remuneracao" style="color:#ec4899;"></div></div></div><div class="pdf-section-block"><div class="pdf-section-title">📅 Período de Afastamento</div><div class="pdf-info-grid"><div class="pdf-info-box"><div class="pdf-label">Data Inicial</div><div class="pdf-value" id="lar-pdf-data-inicio"></div></div><div class="pdf-info-box alt"><div class="pdf-label">Data Final</div><div class="pdf-value" id="lar-pdf-data-fim"></div></div></div><div class="pdf-info-grid"><div class="pdf-info-box"><div class="pdf-label">Total de Dias</div><div class="pdf-value" id="lar-pdf-total-dias"></div></div><div class="pdf-info-box alt"><div class="pdf-label">Tipo de Cálculo</div><div class="pdf-value" id="lar-pdf-tipo"></div></div></div></div><div class="pdf-footer"><p>Documento gerado pela RCT-PJ • Cálculo baseado em mês comercial de 30 dias</p></div><div class="pdf-page-number">Página 1</div></div><div class="pdf-page"><div class="pdf-section-block"><div class="pdf-section-title">💰 Detalhamento do Cálculo</div><div id="lar-pdf-calculo-container"></div></div><div class="pdf-section-block"><div class="pdf-section-title">📋 Dias Remanescentes em Folha</div><div id="lar-pdf-remanescentes-container"></div></div><div class="pdf-total-box" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);"><div class="pdf-total-label">💵 Valor Bruto a Receber</div><div class="pdf-total-valor" id="lar-pdf-valor-total"></div><div class="pdf-data-pagamento">Referente à Licença Anual Remunerada</div></div><div class="pdf-quitacao" style="border-left-color:#ec4899;"><h4>📝 Observações Importantes</h4><p>Este recibo documenta o cálculo da Licença Anual Remunerada conforme direito do prestador PJ (MEI) a cada 12 meses de serviço, correspondendo a uma remuneração mensal acrescida de 1/3.</p><p>O cálculo considera o impacto no mês corrente, caso o afastamento não coincida com o início ou fim do mês, respeitando o calendário de 28 a 31 dias.</p></div><div class="pdf-footer"><p>Documento gerado automaticamente pela RCT-PJ em <span id="lar-pdf-data-geracao"></span></p><p>Cálculo com base em mês comercial de 30 dias • Fuso horário Brasília (UTC-3)</p></div><div class="pdf-page-number">Página 2</div></div></div></div>
 
     <script>
-        let currentMetrics = {};
-        let registrosData = [];
-        let chartInstance = null;
-
-        function formatBR(num) {
-            if (num === undefined || num === null || Number.isNaN(num)) return '';
-            return Number(num).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        let calculoData = null, larCalculoData = null;
+        let toastTimeout = null;
+        
+        function fecharToast() {
+            const toast = document.getElementById('successToast');
+            if (!toast) return;
+            toast.classList.remove('show');
+            if (toastTimeout) {
+                clearTimeout(toastTimeout);
+                toastTimeout = null;
+            }
         }
-
-        function formatOneDecimal(num) {
-            if (num === undefined || num === null || Number.isNaN(num)) return '';
-            return Number(num).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-        }
-
-        function safeText(value, fallback = '') {
-            return value === undefined || value === null || value === '' ? fallback : value;
-        }
-
-        function escapeHtml(value) {
-            return String(value ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-
-        function setBodyLockState() {
-            const sidebarOpen = document.getElementById('appSidebar').classList.contains('active');
-            const modalOpen = !document.getElementById('criminaisModal').classList.contains('hidden') || !document.getElementById('pdfModal').classList.contains('hidden');
-            document.body.classList.toggle('sidebar-open', sidebarOpen && window.innerWidth < 1024);
-            document.body.classList.toggle('modal-open', modalOpen);
-        }
-
-        function openSidebar() {
-            if (window.innerWidth >= 1024) return;
-            document.getElementById('appSidebar').classList.add('active');
-            document.getElementById('sidebarOverlay').classList.add('active');
-            setBodyLockState();
-        }
-
-        function closeSidebar() {
-            document.getElementById('appSidebar').classList.remove('active');
-            document.getElementById('sidebarOverlay').classList.remove('active');
-            setBodyLockState();
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('appSidebar');
-            if (sidebar.classList.contains('active')) closeSidebar();
-            else openSidebar();
-        }
-
-        function switchSection(section) {
-            document.querySelectorAll('section[id$="Content"]').forEach(s => s.classList.add('hidden'));
-            document.getElementById(section + 'Content').classList.remove('hidden');
-            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('bg-zinc-800'));
-            document.getElementById('nav-' + section).classList.add('bg-zinc-800');
-            if (window.innerWidth < 1024) closeSidebar();
-        }
-
-        function showProgress(pct, label, sub) {
-            const overlay = document.getElementById('progressOverlay');
-            overlay.classList.remove('hidden');
-            document.getElementById('progressBar').style.width = pct + '%';
-            document.getElementById('progressPct').textContent = pct + '%';
-            if (label) document.getElementById('progressLabel').textContent = label;
-            if (sub)   document.getElementById('progressSub').textContent = sub;
-        }
-
-        function hideProgress() {
-            document.getElementById('progressOverlay').classList.add('hidden');
-            document.getElementById('progressBar').style.width = '0%';
-        }
-
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            document.getElementById('fileName').textContent = file.name;
-            document.getElementById('mobileFileName').textContent = file.name;
-
-            showProgress(10, 'Lendo arquivo…', file.name);
-
-            const reader = new FileReader();
-            reader.onprogress = ev => {
-                if (ev.lengthComputable) {
-                    const pct = Math.round((ev.loaded / ev.total) * 30) + 10;
-                    showProgress(pct, 'Lendo arquivo…', file.name);
-                }
-            };
-            reader.onload = ev => {
-                showProgress(40, 'Interpretando planilha…', 'Aguarde');
+        
+        function showSuccessToast(message, autoScroll = true) {
+            const toast = document.getElementById('successToast');
+            const msgSpan = document.getElementById('toastMessage');
+            msgSpan.innerText = message;
+            toast.classList.add('show');
+            if (autoScroll) {
                 setTimeout(() => {
-                    const data = new Uint8Array(ev.target.result);
-                    showProgress(55, 'Interpretando planilha…', 'Processando abas');
-                    setTimeout(() => {
-                        const wb = XLSX.read(data, { type: 'array', cellDates: true });
-                        processWorkbook(wb);
-                    }, 60);
-                }, 60);
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function processWorkbook(wb) {
-            let globalRows = [];
-            let registrosRows = [];
-            let totalMetrosVias = 0;
-
-            wb.SheetNames.forEach(name => {
-                const lower = name.toLowerCase();
-                const ws = wb.Sheets[name];
-                const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
-
-                if (lower.includes('global') || name === wb.SheetNames[0]) {
-                    globalRows = json.slice(1).filter(row => row[0] && String(row[0]).trim() !== '');
-                }
-                if (lower.includes('registros') || lower.includes('reg')) {
-                    registrosRows = json.slice(1).filter(row =>
-                        (row[3] != null && String(row[3]).trim() !== '') ||
-                        (row[7] != null && String(row[7]).trim() !== '')
-                    );
-                }
-                if (lower.includes('vias')) {
-                    const mCols = [2, 5, 8, 11, 14, 17, 20];
-                    json.slice(1).forEach(row => {
-                        mCols.forEach(c => {
-                            const v = parseFloat(row[c]);
-                            if (!isNaN(v) && v > 0) totalMetrosVias += v;
-                        });
-                    });
-                }
-            });
-
-            const parsed = globalRows.map(r => ({
-                municipio: String(r[2] || '').trim(),
-                remocoes: parseFloat(String(r[5] || '').replace(',', '.')) || 0,
-                vias: parseFloat(String(r[6] || '').replace(',', '.')) || 0,
-                peso: parseFloat(String(r[7] || '').replace(',', '.')) || 0,
-                fuzis: parseFloat(String(r[11] || '').replace(',', '.')) || 0,
-                pistolas: parseFloat(String(r[12] || '').replace(',', '.')) || 0,
-                prisoes: parseFloat(String(r[15] || '').replace(',', '.')) || 0,
-                data: (r[0] instanceof Date) ? r[0] : null
-            })).filter(r => r.municipio || r.remocoes > 0 || r.peso > 0);
-
-            const datasGlobal = parsed.map(r => r.data).filter(Boolean);
-            const datasUnicas = new Set(
-                datasGlobal.map(d => `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`)
-            );
-            const diasEfetivos = datasUnicas.size;
-
-            const TAXA = 1.329;
-            const totalRemocoesBruto = parsed.reduce((a, r) => a + r.remocoes, 0);
-            const totalViasBruto = parsed.reduce((a, r) => a + r.vias, 0);
-            const totalPesoBruto = parsed.reduce((a, r) => a + r.peso, 0);
-
-            const totalRemocoes = Math.round(totalRemocoesBruto * TAXA);
-            const totalVias = Math.round(totalViasBruto * TAXA);
-            const totalPeso = Math.round(totalPesoBruto * TAXA * 10) / 10;
-
-            const totalFuzis = parsed.reduce((a, r) => a + r.fuzis, 0);
-            const totalPistolas = parsed.reduce((a, r) => a + r.pistolas, 0);
-            const totalPrisoes = parsed.reduce((a, r) => a + r.prisoes, 0);
-
-            registrosData = registrosRows.map(r => {
-                let dataFormatada = '';
-                if (r[3] instanceof Date) {
-                    const dd = String(r[3].getUTCDate()).padStart(2, '0');
-                    const mm = String(r[3].getUTCMonth() + 1).padStart(2, '0');
-                    const yy = r[3].getUTCFullYear();
-                    dataFormatada = `${dd}/${mm}/${yy}`;
-                }
-                return {
-                    depto: String(r[0] || '').trim(),
-                    dp: String(r[1] || '').trim(),
-                    regOcor: String(r[2] || '').trim(),
-                    data: dataFormatada,
-                    local: String(r[4] || '').trim(),
-                    faccao: String(r[5] || '').trim(),
-                    prisoes: String(r[6] || '').trim(),
-                    armas: String(r[7] || '').trim(),
-                    municoes: String(r[8] || '').trim(),
-                    drogas: String(r[9] || '').trim()
-                };
-            }).filter(r => r.armas || r.prisoes || r.data);
-
-            const pesoPorMun = {};
-            parsed.forEach(r => {
-                if (r.municipio) pesoPorMun[r.municipio] = (pesoPorMun[r.municipio] || 0) + r.peso;
-            });
-
-            const topMunicipios = Object.entries(pesoPorMun)
-                .map(([mun, peso]) => [mun, Math.round(peso * TAXA * 10) / 10])
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
-
-            const viasKmNum = (totalMetrosVias * TAXA) / 1000;
-            const viasKmFormatted = viasKmNum.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
-            currentMetrics = {
-                preliminares: {
-                    dias: diasEfetivos,
-                    cpa: 4,
-                    bpm: '21 + CPP',
-                    localidades: 227,
-                    municipios: Object.keys(pesoPorMun).length,
-                    viasKm: viasKmFormatted
-                },
-                remocoes: {
-                    obstaculos: totalRemocoes,
-                    viasLiberadas: totalVias,
-                    entulho: totalPeso,
-                    entulhoFormatted: formatOneDecimal(totalPeso),
-                    cristo: (totalPeso / 1150).toFixed(1)
-                },
-                recolocacoes: {
-                    denuncias: 104,
-                    taxa: '2,4%',
-                    eficiencia: '97,6%',
-                    faccao: 'Comando Vermelho'
-                },
-                criminais: {
-                    fuzis: totalFuzis,
-                    pistolas: totalPistolas,
-                    prisoes: totalPrisoes
-                },
-                topMunicipios
-            };
-
-            showProgress(70, 'Calculando métricas…', 'Quase lá');
-
-            setTimeout(() => {
-                showProgress(85, 'Renderizando dashboard…', 'Finalizando');
-
-                document.getElementById('emptyState').classList.add('hidden');
-                document.getElementById('realContent').classList.remove('hidden');
-                document.getElementById('linesProcessed').textContent = `${parsed.length} linhas processadas`;
-
-                renderDashboard();
-                renderRecolocacoes();
-                renderCriminais();
-
-                showProgress(95, 'Gerando gráficos…', 'Finalizando');
-
-                setTimeout(() => {
-                    renderChart();
-                    showProgress(100, 'Concluído!', `${parsed.length} linhas processadas`);
-                    setTimeout(() => {
-                        hideProgress();
-                        switchSection('dashboard');
-                        closeSidebar();
-                    }, 500);
-                }, 80);
-            }, 80);
-        }
-
-        function metricCard({ label, value, tone = 'text-zinc-400', valueSize = 'text-4xl sm:text-5xl' }) {
-            return `
-                <div class="card bg-zinc-900 rounded-3xl p-5 sm:p-6 text-center min-h-[140px] sm:min-h-[160px] flex flex-col justify-center">
-                    <div class="text-[11px] sm:text-xs ${tone} uppercase tracking-[0.14em]">${escapeHtml(label)}</div>
-                    <div class="metric-value ${valueSize} mt-4">${escapeHtml(String(value))}</div>
-                </div>
-            `;
-        }
-
-        function renderDashboard() {
-            const m = currentMetrics;
-            document.getElementById('preliminaresGrid').innerHTML = [
-                metricCard({ label: 'Dias efetivos', value: (m.preliminares.dias - 1), valueSize: 'text-4xl sm:text-5xl' }),
-                metricCard({ label: "CPA's", value: m.preliminares.cpa, valueSize: 'text-4xl sm:text-5xl' }),
-                metricCard({ label: "BPM's + CPP", value: m.preliminares.bpm, valueSize: 'text-3xl sm:text-4xl' }),
-                metricCard({ label: 'Localidades', value: m.preliminares.localidades, valueSize: 'text-4xl sm:text-5xl' }),
-                metricCard({ label: 'Municípios', value: m.preliminares.municipios, valueSize: 'text-4xl sm:text-5xl' }),
-                metricCard({ label: 'Vias Mapeadas (km)', value: m.preliminares.viasKm, valueSize: 'text-3xl sm:text-4xl' })
-            ].join('');
-
-            document.getElementById('remocoesGrid').innerHTML = [
-                metricCard({ label: 'Obstáculos', value: formatBR(m.remocoes.obstaculos), tone: 'text-rose-400', valueSize: 'text-5xl sm:text-6xl' }),
-                metricCard({ label: 'Vias liberadas', value: formatBR(m.remocoes.viasLiberadas), tone: 'text-emerald-400', valueSize: 'text-5xl sm:text-6xl' }),
-                metricCard({ label: 'Entulho', value: m.remocoes.entulhoFormatted, tone: 'text-amber-400', valueSize: 'text-4xl sm:text-6xl' })
-            ].join('');
-        }
-
-        function renderRecolocacoes() {
-            const m = currentMetrics;
-            document.getElementById('recolocacoesGrid').innerHTML = [
-                metricCard({ label: 'Denúncias', value: m.recolocacoes.denuncias, tone: 'text-amber-400', valueSize: 'text-5xl sm:text-6xl' }),
-                metricCard({ label: 'Taxa', value: m.recolocacoes.taxa, tone: 'text-amber-400', valueSize: 'text-5xl sm:text-6xl' }),
-                metricCard({ label: 'Eficiência', value: m.recolocacoes.eficiencia, tone: 'text-emerald-400', valueSize: 'text-4xl sm:text-6xl' }),
-                metricCard({ label: 'Facção', value: m.recolocacoes.faccao, tone: 'text-rose-400', valueSize: 'text-3xl sm:text-5xl' })
-            ].join('');
-        }
-
-        function renderCriminais() {
-            const m = currentMetrics;
-            document.getElementById('criminaisGrid').innerHTML = `
-                <div onclick="openCriminaisModal('fuzis')" class="card bg-zinc-900 rounded-3xl p-5 sm:p-8 text-center cursor-pointer min-h-[160px] flex flex-col justify-center">
-                    <div class="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-[0.14em]">Fuzis</div>
-                    <div class="metric-value text-5xl sm:text-6xl mt-4">${formatBR(m.criminais.fuzis)}</div>
-                    <div class="text-[11px] sm:text-xs text-zinc-600 mt-3">clique para detalhar</div>
-                </div>
-                <div onclick="openCriminaisModal('pistolas')" class="card bg-zinc-900 rounded-3xl p-5 sm:p-8 text-center cursor-pointer min-h-[160px] flex flex-col justify-center">
-                    <div class="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-[0.14em]">Pistolas</div>
-                    <div class="metric-value text-5xl sm:text-6xl mt-4">${formatBR(m.criminais.pistolas)}</div>
-                    <div class="text-[11px] sm:text-xs text-zinc-600 mt-3">clique para detalhar</div>
-                </div>
-                <div onclick="openCriminaisModal('prisoes')" class="card bg-zinc-900 rounded-3xl p-5 sm:p-8 text-center cursor-pointer min-h-[160px] flex flex-col justify-center">
-                    <div class="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-[0.14em]">Prisões</div>
-                    <div class="metric-value text-5xl sm:text-6xl mt-4">${formatBR(m.criminais.prisoes)}</div>
-                    <div class="text-[11px] sm:text-xs text-zinc-600 mt-3">clique para detalhar</div>
-                </div>
-            `;
-        }
-
-        function renderChart() {
-            if (!currentMetrics.topMunicipios) return;
-            if (chartInstance) chartInstance.destroy();
-            const ctx = document.getElementById('municipiosChart');
-            if (!ctx) return;
-
-            const labels = currentMetrics.topMunicipios.map(m => m[0]);
-            const values = currentMetrics.topMunicipios.map(m => m[1]);
-
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: ['#0ea5e9', '#06b6d4', '#10b981', '#38bdf8', '#22c55e'],
-                        borderRadius: 12,
-                        borderSkipped: false,
-                        maxBarThickness: 52
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: context => `${formatBR(context.raw)} t`
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: '#cbd5e1',
-                                font: { size: window.innerWidth < 640 ? 10 : 12 },
-                                maxRotation: window.innerWidth < 640 ? 45 : 0,
-                                minRotation: window.innerWidth < 640 ? 45 : 0
-                            },
-                            grid: { display: false }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: '#94a3b8',
-                                callback: value => formatBR(value)
-                            },
-                            grid: { color: 'rgba(148, 163, 184, 0.12)' }
-                        }
+                    const dashboard = document.getElementById('dashboard');
+                    if (dashboard && !dashboard.classList.contains('hidden')) {
+                        dashboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        window.scrollBy({ top: 300, behavior: 'smooth' });
                     }
-                }
-            });
-
-            let listHTML = '<div class="space-y-2">';
-            currentMetrics.topMunicipios.forEach((m, i) => {
-                listHTML += `
-                    <div class="bg-zinc-950/70 border border-zinc-800 rounded-2xl px-4 py-3 flex items-center justify-between gap-4">
-                        <span class="text-sm text-zinc-300 min-w-0 truncate"><strong class="text-zinc-500 mr-1">${i + 1}.</strong>${escapeHtml(m[0])}</span>
-                        <span class="font-mono text-sm sm:text-base text-white flex-shrink-0">${formatBR(m[1])} t</span>
-                    </div>
-                `;
-            });
-            listHTML += '</div>';
-            document.getElementById('municipiosList').innerHTML = listHTML;
-        }
-
-        function openCriminaisModal(tipo) {
-            const reFuzis = /fuz/i;
-            const rePistolas = /pistol|revólv|revolv|submet/i;
-
-            const configs = {
-                fuzis: {
-                    titulo: 'Fuzis Apreendidos',
-                    subtitulo: 'Registros com fuzis – Aba REGISTROS',
-                    icon: 'fa-gun',
-                    cor: 'text-rose-400',
-                    filtro: r => reFuzis.test(r.armas)
-                },
-                pistolas: {
-                    titulo: 'Pistolas Apreendidas',
-                    subtitulo: 'Registros com pistolas/revólveres – Aba REGISTROS',
-                    icon: 'fa-shield-halved',
-                    cor: 'text-amber-400',
-                    filtro: r => rePistolas.test(r.armas)
-                },
-                prisoes: {
-                    titulo: 'Prisões em Flagrante',
-                    subtitulo: 'Registros com presos – Aba REGISTROS',
-                    icon: 'fa-handcuffs',
-                    cor: 'text-indigo-400',
-                    filtro: r => r.prisoes !== ''
-                }
-            };
-
-            const cfg = configs[tipo] || configs.fuzis;
-            const lista = registrosData.filter(cfg.filtro);
-
-            document.getElementById('criminaisModalTitle').innerHTML = `<i class="fa-solid ${cfg.icon} ${cfg.cor} mr-2"></i>${cfg.titulo}`;
-            document.getElementById('criminaisModalSubtitle').textContent = `${lista.length} registro${lista.length !== 1 ? 's' : ''} encontrado${lista.length !== 1 ? 's' : ''} · ${cfg.subtitulo}`;
-
-            if (lista.length === 0) {
-                document.getElementById('registrosList').innerHTML = '<p class="text-center text-zinc-500 py-16 text-sm">Nenhum registro encontrado para este filtro.</p>';
-            } else {
-                let html = '<div class="space-y-4">';
-                lista.forEach(r => {
-                    const badges = [];
-                    if (r.faccao) badges.push(`<span class="bg-rose-900/60 text-rose-300 text-xs px-2.5 py-1 rounded-full">${escapeHtml(r.faccao)}</span>`);
-                    if (r.depto) badges.push(`<span class="bg-zinc-700 text-zinc-300 text-xs px-2.5 py-1 rounded-full">${escapeHtml(r.depto)}</span>`);
-
-                    html += `
-                        <div class="bg-zinc-800 rounded-2xl p-4 sm:p-5 border border-zinc-700/50">
-                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
-                                <div class="flex items-center gap-2 flex-wrap min-w-0">
-                                    ${r.data ? `<span class="font-mono text-xs sm:text-sm font-semibold text-white bg-zinc-700 px-3 py-1 rounded-lg">${escapeHtml(r.data)}</span>` : ''}
-                                    ${r.dp ? `<span class="text-sm font-medium text-zinc-200 break-words">${escapeHtml(r.dp)}</span>` : ''}
-                                </div>
-                                ${r.regOcor ? `<span class="text-[11px] sm:text-xs font-mono text-zinc-500 bg-zinc-900 px-2.5 py-1 rounded-lg w-fit">${escapeHtml(r.regOcor)}</span>` : ''}
-                            </div>
-
-                            ${r.local ? `<div class="flex items-start gap-2 text-sm text-zinc-300 mb-2">
-                                <i class="fa-solid fa-location-dot text-zinc-500 w-4 mt-0.5 flex-shrink-0"></i>
-                                <span class="break-words">${escapeHtml(r.local)}</span>
-                            </div>` : ''}
-
-                            ${r.armas ? `<div class="flex items-start gap-2 text-sm mb-2">
-                                <i class="fa-solid fa-gun text-rose-400 w-4 mt-0.5 flex-shrink-0"></i>
-                                <span class="text-rose-200 font-medium break-words">${escapeHtml(r.armas)}</span>
-                            </div>` : ''}
-
-                            ${r.municoes ? `<div class="flex items-start gap-2 text-sm mb-2">
-                                <i class="fa-solid fa-circle-dot text-amber-400 w-4 mt-0.5 flex-shrink-0"></i>
-                                <span class="text-amber-200 break-words">${escapeHtml(r.municoes)}</span>
-                            </div>` : ''}
-
-                            ${r.drogas ? `<div class="flex items-start gap-2 text-sm mb-2">
-                                <i class="fa-solid fa-pills text-emerald-400 w-4 mt-0.5 flex-shrink-0"></i>
-                                <span class="text-emerald-200 break-words">${escapeHtml(r.drogas)}</span>
-                            </div>` : ''}
-
-                            ${r.prisoes ? `<div class="flex items-start gap-2 text-sm mb-2">
-                                <i class="fa-solid fa-handcuffs text-indigo-400 w-4 mt-0.5 flex-shrink-0"></i>
-                                <span class="text-indigo-200 font-medium break-words">${escapeHtml(r.prisoes)}</span>
-                            </div>` : ''}
-
-                            ${badges.length ? `<div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-zinc-700/50">${badges.join('')}</div>` : ''}
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                document.getElementById('registrosList').innerHTML = html;
+                }, 100);
             }
-
-            document.getElementById('criminaisModal').classList.remove('hidden');
-            setBodyLockState();
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                fecharToast();
+            }, 5000);
         }
-
-        function closeCriminaisModal() {
-            document.getElementById('criminaisModal').classList.add('hidden');
-            setBodyLockState();
-        }
-
-        // ===== GERAÇÃO DO PDF (copiada do Resumo_Extrato) =====
-        function generatePDFContent() {
-            const m = currentMetrics;
-            const dataAtual = new Date().toLocaleDateString('pt-BR');
-            const totalArmas = m.criminais.fuzis + m.criminais.pistolas;
-            const mediaTonPorDia = (m.remocoes.entulho / (m.preliminares.dias - 1)).toFixed(1);
-            const top1Municipio = m.topMunicipios.length ? m.topMunicipios[0][0] : '—';
-            const maxTon = m.topMunicipios.length ? m.topMunicipios[0][1] : 0;
-
-            const rankingBars = m.topMunicipios.map((mun, idx) => {
-                const percent = (mun[1] / maxTon) * 100;
-                return `
-                    <div class="bar-chart-row">
-                        <span class="bar-label">${idx+1}. ${mun[0]}</span>
-                        <div class="bar-bg"><div class="bar-fill" style="width: ${percent}%;"></div></div>
-                        <span class="bar-value">${formatBR(mun[1])} t</span>
-                    </div>
-                `;
-            }).join('');
-
-            return `
-                <div class="pdf-page">
-                    <div class="pdf-header">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <div style="font-size:1.8rem; font-weight:900; color:#0f172a;">BARRICADA ZERO</div>
-                                <div style="font-size:0.7rem; color:#475569;">Resumo Operacional • PMERJ/PCERJ</div>
-                            </div>
-                            <div style="text-align:right;"><div style="font-size:0.6rem; color:#64748b;">Gerado em</div><div style="font-family:monospace; font-weight:700;">${dataAtual}</div></div>
-                        </div>
-                    </div>
-                    <div class="pdf-content">
-                        <div class="pdf-grid">
-                            <div class="pdf-card"><div class="pdf-card-title"><i class="fa-solid fa-chart-line"></i> DADOS PRELIMINARES</div>
-                                <div class="pdf-metric"><span>Dias efetivos:</span><span>${m.preliminares.dias - 1}</span></div>
-                                <div class="pdf-metric"><span>Municípios atendidos:</span><span>${m.preliminares.municipios}</span></div>
-                                <div class="pdf-metric"><span>Localidades:</span><span>${formatBR(m.preliminares.localidades)}</span></div>
-                                <div class="pdf-metric"><span>Vias já mapeadas (com geolocalização) (km):</span><span>${m.preliminares.viasKm}</span></div>
-                            </div>
-                            <div class="pdf-card"><div class="pdf-card-title"><i class="fa-solid fa-trash-can"></i> REMOÇÕES</div>
-                                <div class="pdf-metric"><span>Obstáculos removidos:</span><span>${formatBR(m.remocoes.obstaculos)}</span></div>
-                                <div class="pdf-metric"><span>Vias liberadas:</span><span>${formatBR(m.remocoes.viasLiberadas)}</span></div>
-                                <div class="pdf-metric"><span>Entulho removido:</span><span>${m.remocoes.entulhoFormatted} t</span></div>
-                                <div class="pdf-metric"><span>Equivalente Cristo:</span><span>${m.remocoes.cristo}x</span></div>
-                            </div>
-                            <div class="pdf-card"><div class="pdf-card-title"><i class="fa-solid fa-rotate"></i> RECOLOCAÇÕES</div>
-                                <div class="pdf-metric"><span>Denúncias:</span><span>${formatBR(m.recolocacoes.denuncias)}</span></div>
-                                <div class="pdf-metric"><span>Taxa de recolocação:</span><span>${m.recolocacoes.taxa}</span></div>
-                                <div class="pdf-metric"><span>Eficiência:</span><span>${m.recolocacoes.eficiencia}</span></div>
-                                <div class="pdf-metric"><span>Facção predominante:</span><span>${m.recolocacoes.faccao}</span></div>
-                            </div>
-                            <div class="pdf-card"><div class="pdf-card-title"><i class="fa-solid fa-handcuffs"></i> CRIMINAIS</div>
-                                <div class="pdf-metric"><span>Fuzis apreendidos:</span><span>${formatBR(m.criminais.fuzis)}</span></div>
-                                <div class="pdf-metric"><span>Pistolas apreendidas:</span><span>${formatBR(m.criminais.pistolas)}</span></div>
-                                <div class="pdf-metric"><span>Total de armas:</span><span>${formatBR(totalArmas)}</span></div>
-                                <div class="pdf-metric"><span>Prisões em flagrante:</span><span>${formatBR(m.criminais.prisoes)}</span></div>
-                            </div>
-                        </div>
-                        <div class="pdf-full-width" style="margin-top: 0.6rem;">
-                            <div class="insight-card"><div class="insight-title"><i class="fa-regular fa-lightbulb"></i> INSIGHTS OPERACIONAIS</div>
-                                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; margin-top:0.4rem;">
-                                    <div><div class="insight-title">Média diária</div><div class="insight-value">${mediaTonPorDia} t/dia</div></div>
-                                    <div><div class="insight-title">Maior remoção</div><div class="insight-value">${top1Municipio}</div></div>
-                                    <div><div class="insight-title">Eficiência</div><div class="insight-value">${m.recolocacoes.eficiencia}</div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="pdf-footer">Operação Barricada Zero • 2025/2026 • Página 1 de 2</div>
-                </div>
-                <div class="pdf-page">
-                    <div class="pdf-header"><div style="font-weight:800; font-size:1.2rem;">TOP 5 MUNICÍPIOS POR TONELADAS REMOVIDAS</div></div>
-                    <div class="pdf-content">
-                        <div class="pdf-card" style="padding:0.8rem 1rem;">${rankingBars}</div>
-                        <div class="pdf-full-width" style="margin-top:0.8rem;">
-                            <div class="pdf-card"><div class="pdf-card-title"><i class="fa-solid fa-chart-simple"></i> IMPACTO ESTRATÉGICO</div>
-                                <div style="font-size:0.7rem; line-height:1.5; color:#1e293b;">✔ ${m.topMunicipios.length} municípios lideram o esforço de remoção de barricadas.<br>✔ Mais de ${formatBR(m.remocoes.obstaculos)} obstáculos removidos, garantindo acesso a comunidades.<br>✔ A ação integrada reduziu significativamente a circulação de armas e drogas.</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="pdf-footer">Operação Barricada Zero • 2025/2026 • Página 2 de 2</div>
-                </div>
-            `;
-        }
-
-        function generateAndShowPDF() {
-            const content = generatePDFContent();
-            document.getElementById('pdfPreviewContainer').innerHTML = `<div class="a4-preview">${content}</div>`;
-            document.getElementById('pdfModal').classList.remove('hidden');
-            setBodyLockState();
-        }
-
-        function closePdfModal() {
-            document.getElementById('pdfModal').classList.add('hidden');
-            setBodyLockState();
-        }
-
-        function exportToPDF() {
-            const content = generatePDFContent();
-            const printRoot = document.getElementById('pdfPrintRoot');
-            printRoot.style.display = 'block';
-            printRoot.innerHTML = content;
-
-            setTimeout(() => {
-                window.print();
-                setTimeout(() => {
-                    printRoot.style.display = 'none';
-                    printRoot.innerHTML = '';
-                }, 1000);
-            }, 150);
-        }
-
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 1024) closeSidebar();
-            if (chartInstance) renderChart();
-        });
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                closeSidebar();
-                closeCriminaisModal();
-                closePdfModal();
+        
+        function limparCampoPadrao(input, valorPadrao) {
+            if (input.value === valorPadrao) {
+                input.value = '';
             }
-        });
-
-        window.onload = () => {
-            switchSection('dashboard');
-            setBodyLockState();
-        };
+        }
+        
+        function formatarMoedaInput(input, hiddenFieldId) { const fieldId = hiddenFieldId||'remuneracao'; let valor = input.value.replace(/\D/g,''); valor = (parseInt(valor)/100).toFixed(2); if(isNaN(valor)||valor==='NaN'){ input.value='0,00'; document.getElementById(fieldId).value='0'; return; } const partes = valor.split('.'); const inteiro = parseInt(partes[0]).toLocaleString('pt-BR'); const decimal = partes[1]; input.value = inteiro+','+decimal; document.getElementById(fieldId).value = valor; }
+        document.addEventListener('DOMContentLoaded',()=>{ const inp = document.getElementById('remuneracao_display'); if(inp.value) formatarMoedaInput(inp); });
+        function formatarMoeda(v){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2}).format(v); }
+        function formatarData(d){ return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+        function diasEntre(d1,d2){ const umDia=1000*60*60*24; return Math.floor((d2.getTime()-d1.getTime())/umDia)+1; }
+        function calcularFracaoMes(d){ if(d<=14) return 0; return Math.ceil(d/30); }
+        function verificarDuracaoContrato(){ const i=document.getElementById('data_inicio').value,t=document.getElementById('data_termino').value; if(!i||!t) return; const di=new Date(i+'T00:00:00-03:00'), dt=new Date(t+'T23:59:59-03:00'), dc=diasEntre(di,dt); const c=document.getElementById('compensatoria_container'); if(dc>365) c.classList.remove('hidden'); else c.classList.add('hidden'); }
+        function calcularRescisao(){
+            const rem=parseFloat(document.getElementById('remuneracao').value), iStr=document.getElementById('data_inicio').value, tStr=document.getElementById('data_termino').value, pStr=document.getElementById('data_pagamento').value;
+            if(!iStr||!tStr||!pStr||!rem){ alert('Preencha todos os campos obrigatórios'); return; }
+            const di=new Date(iStr+'T00:00:00-03:00'), dt=new Date(tStr+'T23:59:59-03:00'), dp=new Date(pStr+'T00:00:00-03:00');
+            const remAnterior=document.getElementById('remuneracao_anterior_paga').checked, aviso=document.getElementById('aviso_previo_concedido').checked, compPaga=document.getElementById('compensatoria_anual_paga').checked;
+            const vDiario=rem/30;
+            let dataInicioResiduo=new Date(dt); dataInicioResiduo.setMonth(dataInicioResiduo.getMonth()-1); dataInicioResiduo.setDate(1);
+            if(remAnterior){ dataInicioResiduo=new Date(dt); dataInicioResiduo.setDate(1); }
+            let diasRes=diasEntre(dataInicioResiduo,dt);
+            if(dt.getDate()===31){ const aj=new Date(dt); aj.setDate(30); diasRes=Math.max(0,diasEntre(dataInicioResiduo,aj)); }
+            if(diasRes>30) diasRes=30;
+            const valorRes=diasRes*vDiario;
+            const anoTerm=dt.getFullYear(), inicioAno=new Date(anoTerm,0,1), dataInicioGrat=di>inicioAno?di:inicioAno, diasGrat=diasEntre(dataInicioGrat,dt), mesesGrat=calcularFracaoMes(diasGrat), grat=(mesesGrat/12)*rem;
+            const dataAquis=new Date(dt.getFullYear()-1,dt.getMonth(),dt.getDate()), dataInicioComp=di>dataAquis?di:dataAquis, diasComp=diasEntre(dataInicioComp,dt), mesesComp=calcularFracaoMes(diasComp), compBase=(mesesComp/12)*rem, valComp=compBase+(compBase/3);
+            const diasContrato=diasEntre(di,dt);
+            let valCompAnual=0; if(diasContrato>365 && !compPaga) valCompAnual=rem+(rem/3);
+            const multa=aviso?0:rem;
+            const total=grat+valComp+valorRes+valCompAnual+multa;
+            calculoData={ contratante:document.getElementById('contratante').value, cnpjContratante:document.getElementById('cnpj_contratante').value, prestador:document.getElementById('prestador').value, cnpjPrestador:document.getElementById('cnpj_prestador').value, natureza:document.getElementById('natureza').value, remuneracao:rem, dataInicio:formatarData(di), dataTermino:formatarData(dt), dataPagamento:formatarData(dp), gratificacaoEspecial:grat, valorCompensacao:valComp, valorResiduo:valorRes, diasResiduo:diasRes, valorCompensatoriaAnual:valCompAnual, valorMulta:multa, total };
+            renderDashboard(); document.getElementById('dashboard').classList.remove('hidden'); showSuccessToast("✅ Rescisão calculada com sucesso! Role para baixo e veja o resumo completo.", true);
+        }
+        function renderDashboard(){ const d=calculoData; const c=document.getElementById('verbas-container'); let h=`<div class="result-card animate-slide-up" style="border-left:5px solid #10b981;"><div class="flex justify-between items-start flex-wrap gap-3"><div><div class="flex items-center gap-2 mb-2"><span class="badge badge-success text-sm">💰 Gratificação</span></div><p class="font-bold text-lg sm:text-xl text-slate-900 mb-1">Gratificação Especial</p><p class="text-sm text-slate-600">1/12 por fração de mês (superior a 14 dias) no ano corrente.</p></div><p class="text-2xl sm:text-3xl font-bold text-emerald-600">${formatarMoeda(d.gratificacaoEspecial)}</p></div></div><div class="result-card animate-slide-up" style="animation-delay:0.1s;border-left:5px solid #3b82f6;"><div class="flex justify-between items-start flex-wrap gap-3"><div><div class="flex items-center gap-2 mb-2"><span class="badge badge-info text-sm">📊 Compensação</span></div><p class="font-bold text-lg sm:text-xl text-slate-900 mb-1">Compensação por Serviços Adicionais</p><p class="text-sm text-slate-600">1/12 por fração de mês (superior a 14 dias) + adicional de 1/3.</p></div><p class="text-2xl sm:text-3xl font-bold text-blue-600">${formatarMoeda(d.valorCompensacao)}</p></div></div><div class="result-card animate-slide-up" style="animation-delay:0.2s;border-left:5px solid #8b5cf6;"><div class="flex justify-between items-start flex-wrap gap-3"><div><div class="flex items-center gap-2 mb-2"><span class="badge badge-success text-sm">📅 Resíduo</span></div><p class="font-bold text-lg sm:text-xl text-slate-900 mb-1">Resíduo Contratual</p><p class="text-sm text-slate-600">${d.diasResiduo} dias</p></div><p class="text-2xl sm:text-3xl font-bold text-violet-600">${formatarMoeda(d.valorResiduo)}</p></div></div>`; if(d.valorCompensatoriaAnual>0) h+=`<div class="result-card animate-slide-up" style="animation-delay:0.3s;border-left:5px solid #f59e0b;"><div class="flex justify-between items-start flex-wrap gap-3"><div><div class="flex items-center gap-2 mb-2"><span class="badge badge-warning text-sm">⚡ Compensatória</span></div><p class="font-bold text-lg sm:text-xl text-slate-900 mb-1">Verba Compensatória Anual</p><p class="text-sm text-slate-600">Não foi paga durante o contrato (remuneração mensal + 1/3)</p></div><p class="text-2xl sm:text-3xl font-bold text-amber-600">${formatarMoeda(d.valorCompensatoriaAnual)}</p></div></div>`; if(d.valorMulta>0) h+=`<div class="result-card animate-slide-up" style="animation-delay:0.4s;border-left:5px solid #ef4444;"><div class="flex justify-between items-start flex-wrap gap-3"><div><div class="flex items-center gap-2 mb-2"><span class="badge badge-danger text-sm">⚠️ Multa</span></div><p class="font-bold text-lg sm:text-xl text-rose-700 mb-1">Multa Contratual</p><p class="text-sm text-rose-600">Falta de aviso prévio de 30 dias</p></div><p class="text-2xl sm:text-3xl font-bold text-rose-600">${formatarMoeda(d.valorMulta)}</p></div></div>`; c.innerHTML=h; document.getElementById('total-geral').innerHTML=formatarMoeda(d.total); document.getElementById('data_pagamento_display').innerHTML=`📅 Pagamento previsto para <span class="font-bold text-white">${d.dataPagamento}</span>`; }
+        function openLARModal(){ const r=document.getElementById('remuneracao').value; if(r){ document.getElementById('lar_remuneracao').value=r; document.getElementById('lar_remuneracao_display').value=document.getElementById('remuneracao_display').value; } document.getElementById('larModal').classList.remove('hidden'); document.getElementById('larModal').classList.add('flex'); }
+        function closeLARModal(){ document.getElementById('larModal').classList.add('hidden'); document.getElementById('larModal').classList.remove('flex'); document.getElementById('larResultado').classList.add('hidden'); }
+        function calcularDataFim(){ const i=document.getElementById('lar_data_inicio').value, d=parseInt(document.getElementById('lar_dias_afastamento').value)||0; if(!i||d<=0) return; const ini=new Date(i+'T00:00:00-03:00'), fim=new Date(ini); fim.setDate(fim.getDate()+d-1); document.getElementById('lar_data_fim').value=`${fim.getFullYear()}-${String(fim.getMonth()+1).padStart(2,'0')}-${String(fim.getDate()).padStart(2,'0')}`; }
+        function atualizarTipoCalculo(){ const dias=parseInt(document.getElementById('lar_dias_afastamento').value)||0; const p=document.getElementById('opcao-proporcional'), i=document.getElementById('opcao-integral'); const rp=document.querySelector('input[name="lar_tipo"][value="proporcional"]'), ri=document.querySelector('input[name="lar_tipo"][value="integral"]'); if(dias<30){ p.classList.add('active'); i.classList.remove('active'); rp.checked=true; }else{ p.classList.remove('active'); i.classList.add('active'); ri.checked=true; } }
+        function calcularLAR(){
+            const rem=parseFloat(document.getElementById('lar_remuneracao').value), iStr=document.getElementById('lar_data_inicio').value, fStr=document.getElementById('lar_data_fim').value, dias=parseInt(document.getElementById('lar_dias_afastamento').value)||0, tipo=document.querySelector('input[name="lar_tipo"]:checked').value;
+            if(!iStr||!fStr||!rem||dias<=0){ alert('Preencha todos os campos obrigatórios'); return; }
+            const ini=new Date(iStr+'T00:00:00-03:00'), fim=new Date(fStr+'T23:59:59-03:00'); if(ini>fim){ alert('Data inicial não pode ser maior que data final'); return; }
+            const vDiario=rem/30;
+            let valorBruto, descricaoCalculo, terco, valorTotal;
+            if(tipo==='integral'){ valorBruto = rem; terco = rem/3; valorTotal = valorBruto + terco; descricaoCalculo = `Remuneração mensal completa (30 dias)`; }
+            else { valorBruto = dias * vDiario; terco = valorBruto/3; valorTotal = valorBruto + terco; descricaoCalculo = `${dias} dias × ${formatarMoeda(vDiario)} (valor diário)`; }
+            let diasAntes=0, diasDepois=0, valorDiasAntes=0, valorDiasDepois=0, descAntes='', descDepois='';
+            if(tipo!=='integral'){ 
+                const anoIni=ini.getFullYear(), mesIni=ini.getMonth(), diaIni=ini.getDate();
+                const anoFim=fim.getFullYear(), mesFim=fim.getMonth(), diaFim=fim.getDate();
+                if(anoIni===anoFim && mesIni===mesFim){
+                    const diasTrab = 30 - dias;
+                    if(diasTrab>0){ diasAntes = diasTrab; valorDiasAntes = diasTrab * vDiario; descAntes = `Dias trabalhados no mês (${ini.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}): ${diasTrab} dias = ${formatarMoeda(valorDiasAntes)}`; }
+                } else {
+                    const ultimoDiaIni = new Date(anoIni, mesIni+1, 0).getDate();
+                    const diasLicIni = Math.min(dias, ultimoDiaIni - diaIni + 1);
+                    const diasTrabIni = 30 - diasLicIni;
+                    if(diasTrabIni>0){ diasAntes = diasTrabIni; valorDiasAntes = diasTrabIni * vDiario; descAntes = `Dias trabalhados antes da licença (${ini.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}): ${diasTrabIni} dias = ${formatarMoeda(valorDiasAntes)}`; }
+                    const diasLicFim = diaFim;
+                    const diasTrabFim = 30 - diasLicFim;
+                    if(diasTrabFim>0){ diasDepois = diasTrabFim; valorDiasDepois = diasTrabFim * vDiario; descDepois = `Dias trabalhados após a licença (${fim.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}): ${diasTrabFim} dias = ${formatarMoeda(valorDiasDepois)}`; }
+                }
+            }
+            larCalculoData = { remuneracao:rem, dataInicio:formatarData(ini), dataFim:formatarData(fim), totalDias:dias, tipo, valorBruto, terco, valorTotal, descricaoCalculo, diasAntes, diasDepois, valorDiasAntes, valorDiasDepois, descAntes, descDepois, dataInicioObj:ini, dataFimObj:fim };
+            renderLARResultado(); showSuccessToast("🏖️ Licença Anual calculada! Confira os valores abaixo.", true);
+        }
+        function renderLARResultado(){
+            const d=larCalculoData;
+            const container=document.getElementById('larResultadoContainer');
+            let html=`<div class="lar-result-card"><div class="lar-result-label">Remuneração Mensal Contratual</div><div class="lar-result-value">${formatarMoeda(d.remuneracao)}</div></div>
+                      <div class="lar-result-card"><div class="lar-result-label">Total de Dias de Afastamento</div><div class="lar-result-value" style="color:#8b5cf6;">${d.totalDias} dias</div></div>
+                      <div class="lar-result-card"><div class="lar-result-label">Valor Bruto (${d.tipo==='integral'?'Integral':'Proporcional'})</div><div class="lar-result-value" style="color:#10b981;">${formatarMoeda(d.valorBruto)}</div><p style="font-size:0.875rem;color:#6b7280;margin-top:8px;">${d.descricaoCalculo}</p></div>
+                      <div class="lar-result-card"><div class="lar-result-label">Adicional de 1/3</div><div class="lar-result-value" style="color:#f59e0b;">${formatarMoeda(d.terco)}</div></div>`;
+            if(d.diasAntes>0 || d.diasDepois>0){
+                html+=`<div class="lar-result-card" style="border-left-color:#0ea5e9; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);"><div class="lar-result-label">Dias Remanescentes em Folha</div><div style="margin-top:12px;">`;
+                if(d.diasAntes>0) html+=`<p style="font-size:0.875rem;color:#1e40af;margin-bottom:8px;">${d.descAntes}</p>`;
+                if(d.diasDepois>0) html+=`<p style="font-size:0.875rem;color:#1e40af;">${d.descDepois}</p>`;
+                html+=`</div></div>`;
+            } else { html+=`<div class="lar-result-card" style="border-left-color:#94a3b8;"><div class="lar-result-label">Dias Remanescentes em Folha</div><p style="font-size:0.875rem;color:#475569;">Não há dias trabalhados no mês de início ou término fora do período de licença.</p></div>`; }
+            html+=`<div class="lar-result-card" style="border-left-color:#10b981; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);"><div class="lar-result-label">VALOR TOTAL A RECEBER</div><div class="lar-result-value" style="color:#059669; font-size:2rem;">${formatarMoeda(d.valorTotal)}</div></div>`;
+            container.innerHTML=html;
+            document.getElementById('larResultado').classList.remove('hidden');
+        }
+        function generateLARPDFContent(){
+            if(!larCalculoData) return;
+            document.getElementById('lar-pdf-contratante').textContent=document.getElementById('contratante').value;
+            document.getElementById('lar-pdf-cnpj-contratante').textContent=document.getElementById('cnpj_contratante').value;
+            document.getElementById('lar-pdf-prestador').textContent=document.getElementById('prestador').value;
+            document.getElementById('lar-pdf-cnpj').textContent=document.getElementById('cnpj_prestador').value;
+            document.getElementById('lar-pdf-remuneracao').textContent=formatarMoeda(larCalculoData.remuneracao);
+            document.getElementById('lar-pdf-data-inicio').textContent=larCalculoData.dataInicio;
+            document.getElementById('lar-pdf-data-fim').textContent=larCalculoData.dataFim;
+            document.getElementById('lar-pdf-total-dias').textContent=`${larCalculoData.totalDias} dias`;
+            document.getElementById('lar-pdf-tipo').textContent=larCalculoData.tipo==='integral'?'Integral (30 dias)':'Proporcional';
+            document.getElementById('lar-pdf-data-geracao').textContent=new Date().toLocaleDateString('pt-BR');
+            const calcC=document.getElementById('lar-pdf-calculo-container');
+            calcC.innerHTML=`<div class="pdf-verba-card"><div class="pdf-verba-info"><h4>💰 Valor Bruto (${larCalculoData.tipo==='integral'?'Integral':'Proporcional'})</h4><p>${larCalculoData.descricaoCalculo}</p></div><div class="pdf-verba-valor">${formatarMoeda(larCalculoData.valorBruto)}</div></div><div class="pdf-verba-card"><div class="pdf-verba-info"><h4>➕ Adicional de 1/3</h4></div><div class="pdf-verba-valor" style="color:#f59e0b;">${formatarMoeda(larCalculoData.terco)}</div></div>`;
+            const remanC=document.getElementById('lar-pdf-remanescentes-container');
+            let remanHTML='';
+            if(larCalculoData.diasAntes>0||larCalculoData.diasDepois>0){
+                if(larCalculoData.diasAntes>0) remanHTML+=`<div class="pdf-verba-card"><div class="pdf-verba-info"><h4>📅 Dias Antes da Licença</h4><p>${larCalculoData.descAntes}</p></div><div class="pdf-verba-valor">${formatarMoeda(larCalculoData.valorDiasAntes)}</div></div>`;
+                if(larCalculoData.diasDepois>0) remanHTML+=`<div class="pdf-verba-card"><div class="pdf-verba-info"><h4>📅 Dias Depois da Licença</h4><p>${larCalculoData.descDepois}</p></div><div class="pdf-verba-valor">${formatarMoeda(larCalculoData.valorDiasDepois)}</div></div>`;
+            } else remanHTML=`<div class="pdf-verba-card"><div class="pdf-verba-info"><h4>📅 Dias Remanescentes</h4><p>Não há dias trabalhados no mês de início ou término fora do período de licença.</p></div><div class="pdf-verba-valor">R$ 0,00</div></div>`;
+            remanC.innerHTML=remanHTML;
+            document.getElementById('lar-pdf-valor-total').textContent=formatarMoeda(larCalculoData.valorTotal);
+            return document.getElementById('lar-pdf-content').cloneNode(true);
+        }
+        function previewLARPDF(){ if(!larCalculoData){ alert("Realize o cálculo primeiro."); return; } const c=generateLARPDFContent(); const p=document.getElementById('larPdfPreviewContainer'); p.innerHTML=''; p.appendChild(c); document.getElementById('larPdfModal').classList.remove('hidden'); document.getElementById('larPdfModal').classList.add('flex'); }
+        function closeLARPdfModal(){ document.getElementById('larPdfModal').classList.add('hidden'); document.getElementById('larPdfModal').classList.remove('flex'); }
+        function downloadLARPDF(){ if(!larCalculoData) return; const e=document.getElementById('lar-pdf-content'); const opt={ margin:[10,10,10,10], filename:`LAR_${document.getElementById('prestador').value.replace(/[^a-zA-Z0-9]/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,letterRendering:true,scrollY:0}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css-class'],before:[],after:[],avoid:['.pdf-section-block','.pdf-verba-card']} }; html2pdf().set(opt).from(e).toPdf().get('pdf').then(function(pdf){ const total=pdf.internal.getNumberOfPages(); for(let i=total;i>2;i--) pdf.deletePage(i); }).save(); }
+        function generatePDFContent(){ if(!calculoData) return; document.getElementById('pdf-contratante').textContent=calculoData.contratante; document.getElementById('pdf-cnpj-contratante').textContent=calculoData.cnpjContratante; document.getElementById('pdf-prestador').textContent=calculoData.prestador; document.getElementById('pdf-cnpj-prestador').textContent=calculoData.cnpjPrestador; document.getElementById('pdf-periodo').textContent=`${calculoData.dataInicio} a ${calculoData.dataTermino}`; document.getElementById('pdf-natureza').textContent=calculoData.natureza; document.getElementById('pdf-remuneracao').textContent=formatarMoeda(calculoData.remuneracao); document.getElementById('pdf-data-pagamento').textContent=calculoData.dataPagamento; document.getElementById('pdf-total').textContent=formatarMoeda(calculoData.total); document.getElementById('pdf-data-pagamento-total').textContent=calculoData.dataPagamento; document.getElementById('pdf-assinatura-contratante').textContent=calculoData.contratante.toUpperCase(); document.getElementById('pdf-assinatura-prestador').textContent=calculoData.prestador.toUpperCase(); document.getElementById('pdf-data-geracao').textContent=new Date().toLocaleDateString('pt-BR'); const v=document.getElementById('pdf-verbas-container'); let h=`<div class="pdf-verba-card"><div class="pdf-verba-info"><h4>💰 Gratificação Especial</h4><p>1/12 por fração de mês superior a 14 dias no ano corrente</p></div><div class="pdf-verba-valor">${formatarMoeda(calculoData.gratificacaoEspecial)}</div></div><div class="pdf-verba-card"><div class="pdf-verba-info"><h4>📊 Compensação por Serviços Adicionais</h4><p>1/12 por fração de mês superior a 14 dias + adicional de 1/3</p></div><div class="pdf-verba-valor">${formatarMoeda(calculoData.valorCompensacao)}</div></div><div class="pdf-verba-card"><div class="pdf-verba-info"><h4>📅 Resíduo Contratual</h4><p>${calculoData.diasResiduo} dias trabalhados</p></div><div class="pdf-verba-valor">${formatarMoeda(calculoData.valorResiduo)}</div></div>`; if(calculoData.valorCompensatoriaAnual>0) h+=`<div class="pdf-verba-card destaque"><div class="pdf-verba-info"><h4>⚡ Verba Compensatória Anual</h4><p>Não foi paga durante o contrato (1 remuneração mensal + 1/3)</p></div><div class="pdf-verba-valor">${formatarMoeda(calculoData.valorCompensatoriaAnual)}</div></div>`; if(calculoData.valorMulta>0) h+=`<div class="pdf-verba-card multa"><div class="pdf-verba-info"><h4>⚠️ Multa Contratual</h4><p>Falta de aviso prévio de 30 dias</p></div><div class="pdf-verba-valor">${formatarMoeda(calculoData.valorMulta)}</div></div>`; v.innerHTML=h; return document.getElementById('pdf-content').cloneNode(true); }
+        function previewPDF(){ if(!calculoData){ alert("Realize o cálculo primeiro."); return; } const c=generatePDFContent(); const p=document.getElementById('pdfPreviewContainer'); p.innerHTML=''; p.appendChild(c); document.getElementById('pdfModal').classList.remove('hidden'); document.getElementById('pdfModal').classList.add('flex'); }
+        function downloadPDF(){ if(!calculoData) return; const e=document.getElementById('pdf-content'); const opt={ margin:[10,10,10,10], filename:`RCT-PJ_Rescisao_${calculoData.prestador.replace(/[^a-zA-Z0-9]/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,letterRendering:true,scrollY:0}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css-class'],before:[],after:[],avoid:['.pdf-section-block','.pdf-verba-card','.pdf-total-box','.pdf-quitacao','.pdf-assinaturas']} }; html2pdf().set(opt).from(e).toPdf().get('pdf').then(function(pdf){ const total=pdf.internal.getNumberOfPages(); for(let i=total;i>0;i--) if(i>3) pdf.deletePage(i); }).save(); }
+        function closeModal(){ const m=document.getElementById('pdfModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+        function resetForm(){ document.getElementById('rescisaoForm').reset(); document.getElementById('dashboard').classList.add('hidden'); document.getElementById('compensatoria_container').classList.add('hidden'); calculoData=null; document.getElementById('data_inicio').value='2025-01-15'; document.getElementById('data_termino').value='2026-03-30'; document.getElementById('data_pagamento').value='2026-03-30'; document.getElementById('remuneracao_display').value='3.500,00'; document.getElementById('remuneracao').value='3500'; showSuccessToast("🔄 Formulário reiniciado. Preencha os dados novamente.", false); }
+        document.addEventListener('DOMContentLoaded',()=>{ const aviso=document.getElementById('aviso_previo_concedido'), info=document.getElementById('multa_info'); aviso.addEventListener('change',()=>info.classList.toggle('hidden',aviso.checked)); });
     </script>
 </body>
 </html>
